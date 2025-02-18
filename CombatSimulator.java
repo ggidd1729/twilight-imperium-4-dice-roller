@@ -26,6 +26,7 @@ public class CombatSimulator {
             case "duha_menaimon", "quetzecoatl", "artemiris", "wrath_of_kenara", 
                  "fourth_moon", "memoria", "ouranos", "loncarra_ssodu" -> new Flagship(2, 7);
             case "matriarch", "visz_el_vir", "alastor", "van_hauge" -> new Flagship(2, 9);
+            case "z_grav_eidolon" -> new Mech(2, 8);
             default -> throw new IllegalArgumentException("Unknown ship type: " + type);
         };
     }
