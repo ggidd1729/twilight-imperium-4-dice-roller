@@ -3,6 +3,7 @@ It currently takes input from the command-line and rolls dice for space combat.
 Flagships are not yet supported. I plan to add these as well as rolling for space cannon, anti-fighter barrage, bombardment and ground combat, roll modifiers and a GUI.
 
 Compile the program: javac CombatSimulator.java
+
 Run the program: java CombatSimulator (ship type) (number of ships) [(ship type) (number of ships)]
 
 Ship legend:
