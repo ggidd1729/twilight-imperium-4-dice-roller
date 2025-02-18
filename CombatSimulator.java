@@ -7,19 +7,25 @@ import java.util.stream.Collectors;
 public class CombatSimulator {
     private static Ship createShip(String type) {
         return switch (type.toLowerCase()) {
-            case "c" -> new Carrier();
-            case "c2" -> new Carrier();
+            case "c", "c2" -> new Carrier();
             case "cr" -> new Cruiser();
             case "cr2" -> new Cruiser(2);
             case "d" -> new Destroyer();
             case "d2" -> new Destroyer(2);
             case "d3" -> new Destroyer(3);
-            case "dr" -> new Dreadnought();
-            case "dr2" -> new Dreadnought();
+            case "dr", "dr2" -> new Dreadnought();
             case "dr3" -> new Dreadnought(3);
             case "f" -> new Fighter();
             case "f2" -> new Fighter(2);
             case "f3" -> new Fighter(3);
+            case "hil_colish" -> new Flagship(1, 5);
+            case "arc_secundus", "son_of_ragh", "inferno", "dynamo", "genesis", "001", 
+                 "arvicon_rex", "memoria2", "terror_between", "ysia_yssrila" -> new Flagship(2, 5);
+            case "cmorran_norr", "jns_hylarim" -> new Flagship(2, 6);
+            case "salai_sai_corian" -> new Flagship(1, 7);
+            case "duha_menaimon", "quetzecoatl", "artemiris", "wrath_of_kenara", 
+                 "fourth_moon", "memoria", "ouranos", "loncarra_ssodu" -> new Flagship(2, 7);
+            case "matriarch", "visz_el_vir", "alastor", "van_hauge" -> new Flagship(2, 9);
             default -> throw new IllegalArgumentException("Unknown ship type: " + type);
         };
     }
