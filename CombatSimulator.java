@@ -16,6 +16,7 @@ public class CombatSimulator {
             case "d3" -> new Destroyer(3);
             case "dr" -> new Dreadnought();
             case "dr2" -> new Dreadnought();
+            case "dr3" -> new Dreadnought(3);
             case "f" -> new Fighter();
             case "f2" -> new Fighter(2);
             case "f3" -> new Fighter(3);
