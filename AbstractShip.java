@@ -1,0 +1,47 @@
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Random;
+
+public abstract class AbstractShip implements Ship {
+    private final int numDice;
+    private final int combatValue;
+    private final String shipType;
+    private final Random random;
+
+    protected AbstractShip(int numDice, int combatValue, String shipType) {
+        this.numDice = numDice;
+        this.combatValue = combatValue;
+        this.shipType = shipType;
+        this.random = new Random();
+    }
+
+    public CombatResult rollDice() {
+        List<Integer> rolls = new ArrayList<>();
+        int hits = 0;
+        
+        for (int i = 0; i < numDice; i++) {
+            int roll = random.nextInt(10) + 1; // Roll d10 (1-10)
+            rolls.add(roll);
+            if (roll >= combatValue) {
+                hits++;
+            }
+        }
+        
+        return new CombatResult(rolls, hits);
+    }
+
+    @Override
+    public int getCombatValue() {
+        return combatValue;
+    }
+
+    @Override
+    public int getNumDice() {
+        return numDice;
+    }
+
+    @Override
+    public String getShipType() {
+        return shipType;
+    }
+}
