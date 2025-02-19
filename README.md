@@ -5,7 +5,7 @@ Planned additions: flagship combat modifying abilities, faction choice, more com
 
 Compile the program: javac CombatSimulator.java
 
-Run the program: java CombatSimulator (combat modifiers) (ship type) (number of ships) [(ship type) (number of ships)]
+Run the program: java CombatSimulator (combat modifiers) (ship type) (number of ships) [(ship type) (number of ships)]  
 
 
 Modifiers legend:
@@ -17,7 +17,7 @@ Modifiers legend:
 
 +1fighter: apply +1 to all combat rolls made by fighters in this combat
 
-+2fighter: apply +2 to all combat rolls made by fighters in this combat
++2fighter: apply +2 to all combat rolls made by fighters in this combat  
 
 
 Ship legend:
