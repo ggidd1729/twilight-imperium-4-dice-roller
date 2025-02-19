@@ -103,19 +103,32 @@ public class CombatSimulator {
 
         groupedShips.forEach((type, ships) -> {
             int totalHits = 0;
-            List<Integer> allRolls = new ArrayList<>();
+            List<Integer> allPreModifierRolls = new ArrayList<>();
+            List<Integer> allPostModifierRolls = new ArrayList<>();
+            boolean anyModified = false;
 
             for (Ship ship : ships) {
                 CombatResult result = ship.rollDice(modifiers, fleet);
                 totalHits += result.getHits();
-                allRolls.addAll(result.getRolls());
+                allPreModifierRolls.addAll(result.getPreModifierRolls());
+                allPostModifierRolls.addAll(result.getPostModifierRolls());
+                if (result.wasModified()) {
+                    anyModified = true;
+                }
             }
 
-            System.out.printf("%d %s rolled %s with %d hits%n",
+            // Print results
+            System.out.printf("%d %s rolled %s",
                 ships.size(),
                 ships.size() == 1 ? type : type + "s",
-                allRolls,
-                totalHits);
+                allPreModifierRolls);
+            
+            // Only print post-modifier rolls if modifications were applied
+            if (anyModified) {
+                System.out.printf(" (modified to %s)", allPostModifierRolls);
+            }
+            
+            System.out.printf(" with %d hits%n", totalHits);
             
             grandTotalHits.addAndGet(totalHits);
         });

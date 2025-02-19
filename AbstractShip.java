@@ -16,9 +16,11 @@ public abstract class AbstractShip implements Ship {
     }
 
     public CombatResult rollDice(List<RollModifier> modifiers, List<Ship> fleet) {
-        List<Integer> rolls = new ArrayList<>();
+        List<Integer> preModifierRolls = new ArrayList<>();
+        List<Integer> postModifierRolls = new ArrayList<>();
         int hits = 0;
         int extraDice = 0;
+        boolean wasModified = false;
 
         // Check for NRA ability (Visz el Vir affecting Z Grav Eidolons)
         if (this instanceof Mech && isNRAFlagshipPresent(fleet)) {
@@ -29,26 +31,32 @@ public abstract class AbstractShip implements Ship {
         
         for (int i = 0; i < totalDice; i++) {
             int roll = random.nextInt(10) + 1; // Roll d10 (1-10)
-            
+            preModifierRolls.add(roll);
+
             // Check for Jol-Nar ability before modifiers
             int naturalHits = 0;
             if (this instanceof Flagship && isJolNarFlagshipPresent(fleet) && (roll == 9 || roll == 10)) {
                 naturalHits = 2; // Add 2 hits for natural 9 or 10
             }
             
+            int modifiedRoll = roll;
             // Apply Sardakk modifier if present (but not to itself)
             if (isSardakkFlagshipPresent(fleet) && !(this instanceof Flagship)) {
-                roll += 1;
+                modifiedRoll += 1;
+                wasModified = true;
             }
             
             // Apply regular modifiers
-            roll = applyModifiers(roll, modifiers);
+            int finalRoll = applyModifiers(modifiedRoll, modifiers);
+            if (finalRoll != modifiedRoll) {
+                wasModified = true;
+            }
             
             // Ensure roll stays within 1-10 range
-            roll = Math.max(1, Math.min(10, roll));
+            finalRoll = Math.max(1, Math.min(10, finalRoll));
             
-            rolls.add(roll);
-            if (roll >= combatValue) {
+            postModifierRolls.add(finalRoll);
+            if (finalRoll >= combatValue) {
                 hits++;
             }
             
@@ -56,7 +64,7 @@ public abstract class AbstractShip implements Ship {
             hits += naturalHits;
         }
         
-        return new CombatResult(rolls, hits);
+        return new CombatResult(preModifierRolls, postModifierRolls, hits, wasModified);
     }
 
     private boolean isJolNarFlagshipPresent(List<Ship> fleet) {
