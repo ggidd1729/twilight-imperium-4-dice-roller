@@ -47,3 +47,11 @@ f: fighter
 f2: fighter 2 (or Naalu's Hybrid Crystal Fighter 1)
 
 f3: Naalu's Hybrid Crystal Fighter 2
+
+i: infantry
+
+i2: infantry 2 or Sol's Spec Ops 1
+
+i3: Sol's Spec Ops 2
+
+m: mech
