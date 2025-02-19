@@ -1,5 +1,6 @@
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
+import javax.swing.border.TitledBorder;
 import java.awt.*;
 import java.util.*;
 import java.util.List;
@@ -68,8 +69,11 @@ public class CombatSimulator extends JFrame {
     }
     
     private static final String[] MODIFIERS = {
-        "Morale Boost (+1 to all combat rolls)", "Prophecy of Ixth (+1 to fighter rolls)", 
-        "Fighter Prototype (+2 fighter rolls)", "+2 Flagship Rolls", "+2 Mech Rolls"
+        "<html>Morale Boost<br>(+1 to all combat rolls)</html>", 
+        "<html>Prophecy of Ixth<br>(+1 to fighter rolls)</html>", 
+        "<html>Fighter Prototype<br>(+2 to fighter rolls)</html>", 
+        "+2 Flagship Rolls", 
+        "+2 Mech Rolls"
     };
     
     // Map of modifiers that should be enabled/disabled based on faction
@@ -166,7 +170,7 @@ public class CombatSimulator extends JFrame {
         
         // Try to load a background image
         try {
-            backgroundImage = new ImageIcon(getClass().getResource("/ti4_background.jpg"));
+            backgroundImage = new ImageIcon(getClass().getResource("/background.png"));
             // If you don't have the image yet, comment out the line above and use a color instead
         } catch (Exception e) {
             System.out.println("Background image not found, using default color.");
@@ -203,9 +207,12 @@ public class CombatSimulator extends JFrame {
         
         JLabel factionLabel = new JLabel("Select Faction:");
         factionLabel.setForeground(Color.WHITE);
+        factionLabel.setFont(new Font("Monospaced", Font.BOLD, 16));
         northPanel.add(factionLabel);
         
+        // Make faction combo box larger
         factionComboBox = new JComboBox<>(FACTIONS);
+        factionComboBox.setFont(new Font("Monospaced", Font.PLAIN, 16));
         factionComboBox.addActionListener(e -> {
             updateShipSelectionForFaction();
             updateModifiersForFaction();
@@ -219,11 +226,40 @@ public class CombatSimulator extends JFrame {
         JPanel centerPanel = new JPanel(new BorderLayout());
         centerPanel.setOpaque(false);
         
-        // Ship Selection Panel
+        // Ship Selection Panel with styled title
         shipSelectionPanel = new JPanel(new GridLayout(0, 4, 10, 10));
         shipSelectionPanel.setOpaque(false);
-        shipSelectionPanel.setBorder(BorderFactory.createTitledBorder(
-                BorderFactory.createLineBorder(Color.GRAY), "Ship Selection"));
+        
+        // Create a styled titled border with larger white text on black background
+        TitledBorder shipBorder = BorderFactory.createTitledBorder(
+                BorderFactory.createLineBorder(Color.GRAY), "Ship Selection");
+        shipBorder.setTitleFont(new Font("Monospaced", Font.BOLD, 16));
+        shipBorder.setTitleColor(Color.WHITE);
+        shipSelectionPanel.setBorder(shipBorder);
+        
+        // Add a component listener to paint the black background for the title
+        shipSelectionPanel.addComponentListener(new java.awt.event.ComponentAdapter() {
+            @Override
+            public void componentShown(java.awt.event.ComponentEvent e) {
+                try {
+                    // Get the border title position and paint a black background
+                    TitledBorder border = (TitledBorder) shipSelectionPanel.getBorder();
+                    int titleWidth = border.getTitleFont().getStringBounds(border.getTitle(), 
+                            ((Graphics2D)shipSelectionPanel.getGraphics()).getFontRenderContext()).getBounds().width;
+                    int titleX = shipSelectionPanel.getInsets().left + 5;
+                    int titleY = 0;
+                    
+                    // Create a black panel behind the title
+                    JPanel titleBackPanel = new JPanel();
+                    titleBackPanel.setBounds(titleX - 5, titleY, titleWidth + 10, 22);
+                    titleBackPanel.setBackground(Color.BLACK);
+                    shipSelectionPanel.add(titleBackPanel);
+                    shipSelectionPanel.setComponentZOrder(titleBackPanel, 0);
+                } catch (Exception ex) {
+                    // Handle potential null pointer exception if graphics context isn't ready
+                }
+            }
+        });
         
         // Initial ship selection panel will be updated when faction is selected
         initializeShipSelectionPanel();
@@ -234,11 +270,37 @@ public class CombatSimulator extends JFrame {
         
         centerPanel.add(shipScrollPane, BorderLayout.CENTER);
         
-        // Modifiers Panel
+        // Modifiers Panel with styled title
         modifiersPanel = new JPanel(new GridLayout(0, 3, 10, 5));
         modifiersPanel.setOpaque(false);
-        modifiersPanel.setBorder(BorderFactory.createTitledBorder(
-                BorderFactory.createLineBorder(Color.GRAY), "Combat Modifiers"));
+        
+        TitledBorder modifiersBorder = BorderFactory.createTitledBorder(
+                BorderFactory.createLineBorder(Color.GRAY), "Combat Modifiers");
+        modifiersBorder.setTitleFont(new Font("Monospaced", Font.BOLD, 16));
+        modifiersBorder.setTitleColor(Color.WHITE);
+        modifiersPanel.setBorder(modifiersBorder);
+        
+        // Add similar component listener for modifiers panel
+        modifiersPanel.addComponentListener(new java.awt.event.ComponentAdapter() {
+            @Override
+            public void componentShown(java.awt.event.ComponentEvent e) {
+                try {
+                    TitledBorder border = (TitledBorder) modifiersPanel.getBorder();
+                    int titleWidth = border.getTitleFont().getStringBounds(border.getTitle(), 
+                            ((Graphics2D)modifiersPanel.getGraphics()).getFontRenderContext()).getBounds().width;
+                    int titleX = modifiersPanel.getInsets().left + 5;
+                    int titleY = 0;
+                    
+                    JPanel titleBackPanel = new JPanel();
+                    titleBackPanel.setBounds(titleX - 5, titleY, titleWidth + 10, 22);
+                    titleBackPanel.setBackground(Color.BLACK);
+                    modifiersPanel.add(titleBackPanel);
+                    modifiersPanel.setComponentZOrder(titleBackPanel, 0);
+                } catch (Exception ex) {
+                    // Handle potential null pointer exception
+                }
+            }
+        });
         
         initializeModifiersPanel();
         
@@ -253,7 +315,7 @@ public class CombatSimulator extends JFrame {
         resultsArea = new JTextArea(10, 40);
         resultsArea.setEditable(false);
         resultsArea.setBackground(new Color(240, 240, 240));
-        resultsArea.setFont(new Font("Monospaced", Font.PLAIN, 12));
+        resultsArea.setFont(new Font("Monospaced", Font.PLAIN, 13));
         JScrollPane resultsScrollPane = new JScrollPane(resultsArea);
         
         southPanel.add(resultsScrollPane, BorderLayout.CENTER);
@@ -262,9 +324,11 @@ public class CombatSimulator extends JFrame {
         buttonPanel.setOpaque(false);
         
         JButton rollButton = new JButton("Roll for Combat");
+        rollButton.setFont(new Font("Monospaced", Font.PLAIN, 13));
         rollButton.addActionListener(e -> performCombatRoll());
         
         JButton resetButton = new JButton("Reset");
+        resetButton.setFont(new Font("Monospaced", Font.PLAIN, 13));
         resetButton.addActionListener(e -> resetSimulator());
         
         buttonPanel.add(rollButton);
@@ -337,9 +401,11 @@ public class CombatSimulator extends JFrame {
             JLabel flagshipLabel = new JLabel("Flagship: " + flagships[0]);
             flagshipLabel.setForeground(Color.WHITE);
             flagshipLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
+            flagshipLabel.setFont(new Font("Monospaced", Font.PLAIN, 13));
             
             SpinnerNumberModel model = new SpinnerNumberModel(0, 0, 1, 1);
             JSpinner quantitySpinner = new JSpinner(model);
+            quantitySpinner.setFont(new Font("Monospaced", Font.PLAIN, 13));
             quantitySpinner.setMaximumSize(new Dimension(80, 30));
             quantitySpinner.setAlignmentX(Component.CENTER_ALIGNMENT);
             // Add a change listener to check for Jol-Nar flagship
@@ -410,9 +476,11 @@ public class CombatSimulator extends JFrame {
         JLabel shipLabel = new JLabel(shipName);
         shipLabel.setForeground(Color.WHITE);
         shipLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
+        shipLabel.setFont(new Font("Monospaced", Font.BOLD, 13));
         
         SpinnerNumberModel model = new SpinnerNumberModel(0, 0, 20, 1);
         JSpinner quantitySpinner = new JSpinner(model);
+        quantitySpinner.setFont(new Font("Monospaced", Font.PLAIN, 13));
         quantitySpinner.setMaximumSize(new Dimension(80, 30));
         quantitySpinner.setAlignmentX(Component.CENTER_ALIGNMENT);
         
@@ -453,6 +521,7 @@ public class CombatSimulator extends JFrame {
         for (String modifier : MODIFIERS) {
             JCheckBox checkBox = new JCheckBox(modifier);
             checkBox.setForeground(Color.WHITE);
+            checkBox.setFont(new Font("Monospaced", Font.PLAIN, 13));
             checkBox.setOpaque(false);
             modifiersPanel.add(checkBox);
             modifierCheckboxes.add(checkBox);
@@ -560,7 +629,7 @@ public class CombatSimulator extends JFrame {
                     .collect(Collectors.joining(", ")) + "\n");
         }
         
-        resultsArea.append("\nRolling for combat...\n");
+        resultsArea.append("Rolling for combat...\n");
         
         Map<String, List<Ship>> groupedShips = fleet.stream()
             .collect(Collectors.groupingBy(Ship::getShipType));
@@ -599,7 +668,7 @@ public class CombatSimulator extends JFrame {
             grandTotalHits.addAndGet(totalHits);
         });
         
-        resultsArea.append(String.format("\nTotal hits: %d\n", grandTotalHits.get()));
+        resultsArea.append(String.format("Total hits: %d\n", grandTotalHits.get()));
     }
     
     private void resetSimulator() {
@@ -656,15 +725,12 @@ public class CombatSimulator extends JFrame {
     }
     
     private RollModifier convertToRollModifier(String text) {
-        switch (text) {
-            case "Fragile (-1 to all combat rolls)": return RollModifier.MINUS_ONE_ALL;
-            case "Morale Boost (+1 to all combat rolls)": return RollModifier.PLUS_ONE_ALL;
-            case "Prophecy of Ixth (+1 to fighter rolls)": return RollModifier.PLUS_ONE_FIGHTER;
-            case "Fighter Prototype (+2 to fighter rolls)": return RollModifier.PLUS_TWO_FIGHTER;
-            case "+2 Flagship Rolls": return RollModifier.PLUS_TWO_FLAGSHIP;
-            case "+2 Mech Rolls": return RollModifier.PLUS_TWO_MECH;
-            default: return null;
-        }
+        if (text.contains("Morale Boost")) return RollModifier.PLUS_ONE_ALL;
+        if (text.contains("Prophecy of Ixth")) return RollModifier.PLUS_ONE_FIGHTER;
+        if (text.contains("Fighter Prototype")) return RollModifier.PLUS_TWO_FIGHTER;
+        if (text.contains("+2 Flagship Rolls")) return RollModifier.PLUS_TWO_FLAGSHIP;
+        if (text.contains("+2 Mech Rolls")) return RollModifier.PLUS_TWO_MECH;
+        return null;
     }
     
     // This method maps to the original createShip method
