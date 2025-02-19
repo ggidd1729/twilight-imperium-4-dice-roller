@@ -22,7 +22,7 @@ Modifiers legend:
 
 +2mech: apply +2 to all combat rolls made by mechs in this combat
 _____________________________________________________________________________________________________________________________
-Ship legend:
+Ships legend:
 
 c: carrier
 
