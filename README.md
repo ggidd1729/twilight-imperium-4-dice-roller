@@ -17,6 +17,8 @@ Modifiers legend:
 +1fighter: apply +1 to all combat rolls made by fighters in this combat
 
 +2fighter: apply +2 to all combat rolls made by fighters in this combat  
+
++2flagship: apply +2 to all combat rolls made by flagships in this combat
 _____________________________________________________________________________________________________________________________
 Ship legend:
 
