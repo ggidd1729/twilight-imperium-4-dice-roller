@@ -18,6 +18,10 @@ public class CombatSimulator {
             case "f" -> new Fighter();
             case "f2" -> new Fighter(2);
             case "f3" -> new Fighter(3);
+            case "i" -> new Infantry();
+            case "i2" -> new Infantry(2);
+            case "i3" -> new Infantry(3);
+            case "m" -> new Mech();
             case "hil_colish" -> new Flagship(1, 5);
             case "arc_secundus", "son_of_ragh", "inferno", "dynamo", "genesis", "001", 
                  "arvicon_rex", "memoria2", "terror_between", "ysia_yssrila" -> new Flagship(2, 5);
