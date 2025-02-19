@@ -1,8 +1,6 @@
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import java.awt.*;
-// import java.awt.event.ActionEvent;
-// import java.awt.event.ActionListener;
 import java.util.*;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -70,9 +68,35 @@ public class CombatSimulator extends JFrame {
     }
     
     private static final String[] MODIFIERS = {
-        "-1 All Rolls", "+1 All Rolls","Prophecy of Ixth (+1 to fighter rolls)", 
+        "Morale Boost (+1 to all combat rolls)", "Prophecy of Ixth (+1 to fighter rolls)", 
         "Fighter Prototype (+2 fighter rolls)", "+2 Flagship Rolls", "+2 Mech Rolls"
     };
+    
+    // Map of modifiers that should be enabled/disabled based on faction
+    private static final Map<String, Set<String>> FACTION_RESTRICTED_MODIFIERS = new HashMap<>();
+    static {
+        // Mahact Gene-Sorcerers - Only they can use +2 Flagship Rolls
+        Set<String> mahactModifiers = new HashSet<>();
+        mahactModifiers.add("+2 Flagship Rolls");
+        FACTION_RESTRICTED_MODIFIERS.put("The Mahact Gene-Sorcerers", mahactModifiers);
+        
+        // Nekro Virus - Only they can use +2 Mech Rolls
+        Set<String> nekroModifiers = new HashSet<>();
+        nekroModifiers.add("+2 Mech Rolls");
+        FACTION_RESTRICTED_MODIFIERS.put("The Nekro Virus", nekroModifiers);
+    }
+    
+    // Define faction abilities as RollModifiers
+    private static final Map<String, List<RollModifier>> FACTION_ABILITIES = new HashMap<>();
+    static {
+        // Sardakk N'orr +1 to all rolls
+        FACTION_ABILITIES.put("The Sardakk N'orr", List.of(RollModifier.PLUS_ONE_ALL));
+        // Jol-Nar -1 to all rolls
+        FACTION_ABILITIES.put("The Universities of Jol-Nar", List.of(RollModifier.MINUS_ONE_ALL));
+    }
+    
+    // Flag to track if Jol-Nar flagship is present (negates faction penalty)
+    private boolean hasJolNarFlagship = false;
     
     private static final Map<String, String[]> FACTION_FLAGSHIPS = new HashMap<>();
     static {
@@ -182,7 +206,11 @@ public class CombatSimulator extends JFrame {
         northPanel.add(factionLabel);
         
         factionComboBox = new JComboBox<>(FACTIONS);
-        factionComboBox.addActionListener(e -> updateShipSelectionForFaction());
+        factionComboBox.addActionListener(e -> {
+            updateShipSelectionForFaction();
+            updateModifiersForFaction();
+            checkForJolNarFlagship();
+        });
         northPanel.add(factionComboBox);
         
         contentPanel.add(northPanel, BorderLayout.NORTH);
@@ -314,6 +342,8 @@ public class CombatSimulator extends JFrame {
             JSpinner quantitySpinner = new JSpinner(model);
             quantitySpinner.setMaximumSize(new Dimension(80, 30));
             quantitySpinner.setAlignmentX(Component.CENTER_ALIGNMENT);
+            // Add a change listener to check for Jol-Nar flagship
+            quantitySpinner.addChangeListener(e -> checkForJolNarFlagship());
             
             flagshipPanel.add(flagshipLabel);
             flagshipPanel.add(Box.createVerticalStrut(5));
@@ -327,6 +357,49 @@ public class CombatSimulator extends JFrame {
         
         shipSelectionPanel.revalidate();
         shipSelectionPanel.repaint();
+    }
+    
+    private void checkForJolNarFlagship() {
+        String selectedFaction = (String) factionComboBox.getSelectedItem();
+        if (!"The Universities of Jol-Nar".equals(selectedFaction)) {
+            hasJolNarFlagship = false;
+            return;
+        }
+        
+        // Check if Jol-Nar flagship is present
+        JSpinner flagshipSpinner = shipQuantities.get("Flagship:J.N.S. Hylarim");
+        hasJolNarFlagship = flagshipSpinner != null && (Integer)flagshipSpinner.getValue() > 0;
+    }
+    
+    private void updateModifiersForFaction() {
+        String selectedFaction = (String) factionComboBox.getSelectedItem();
+        
+        // Reset all modifiers
+        for (JCheckBox checkBox : modifierCheckboxes) {
+            checkBox.setSelected(false);
+            checkBox.setEnabled(true);
+        }
+        
+        if (selectedFaction == null || selectedFaction.equals("Select Faction")) {
+            return;
+        }
+        
+        // For each modifier checkbox
+        for (JCheckBox checkBox : modifierCheckboxes) {
+            String modifierText = checkBox.getText();
+            
+            // Handle +2 Flagship Rolls - only available to Mahact
+            if (modifierText.equals("+2 Flagship Rolls") && 
+                !selectedFaction.equals("The Mahact Gene-Sorcerers")) {
+                checkBox.setEnabled(false);
+            }
+            
+            // Handle +2 Mech Rolls - only available to Nekro
+            if (modifierText.equals("+2 Mech Rolls") && 
+                !selectedFaction.equals("The Nekro Virus")) {
+                checkBox.setEnabled(false);
+            }
+        }
     }
     
     private void addShipToPanel(String shipName) {
@@ -390,6 +463,12 @@ public class CombatSimulator extends JFrame {
     }
     
     private void performCombatRoll() {
+        String selectedFaction = (String) factionComboBox.getSelectedItem();
+        if (selectedFaction == null || selectedFaction.equals("Select Faction")) {
+            resultsArea.setText("Please select a faction before rolling for combat.");
+            return;
+        }
+        
         // Gather selected ships
         List<Ship> fleet = new ArrayList<>();
         
@@ -430,25 +509,53 @@ public class CombatSimulator extends JFrame {
             return;
         }
         
-        // Gather selected modifiers
-        List<RollModifier> modifiers = new ArrayList<>();
-        for (int i = 0; i < modifierCheckboxes.size(); i++) {
-            JCheckBox checkBox = modifierCheckboxes.get(i);
+        // Gather modifiers from user selection
+        List<RollModifier> userModifiers = new ArrayList<>();
+        for (JCheckBox checkBox : modifierCheckboxes) {
             if (checkBox.isSelected()) {
                 RollModifier modifier = convertToRollModifier(checkBox.getText());
                 if (modifier != null) {
-                    modifiers.add(modifier);
+                    userModifiers.add(modifier);
                 }
             }
         }
         
+        // Add faction abilities (unless canceled by flagship)
+        List<RollModifier> factionModifiers = new ArrayList<>();
+        if (FACTION_ABILITIES.containsKey(selectedFaction)) {
+            List<RollModifier> abilities = FACTION_ABILITIES.get(selectedFaction);
+            
+            // For Jol-Nar, check if flagship cancels the -1 penalty
+            if (selectedFaction.equals("The Universities of Jol-Nar") && hasJolNarFlagship) {
+                // Skip adding the penalty
+            } else {
+                factionModifiers.addAll(abilities);
+            }
+        }
+        
+        // Combine all modifiers
+        List<RollModifier> allModifiers = new ArrayList<>();
+        allModifiers.addAll(userModifiers);
+        allModifiers.addAll(factionModifiers);
+        
         // Perform combat simulation
         resultsArea.setText(""); // Clear previous results
         
-        // Print applied modifiers
-        if (!modifiers.isEmpty()) {
+        // Print faction ability information
+        if (selectedFaction.equals("The Sardakk N'orr")) {
+            resultsArea.append("Sardakk N'orr Faction Ability: +1 to all combat rolls\n");
+        } else if (selectedFaction.equals("The Universities of Jol-Nar")) {
+            if (hasJolNarFlagship) {
+                resultsArea.append("J.N.S. Hylarim negates Jol-Nar's -1 combat penalty\n");
+            } else {
+                resultsArea.append("Universities of Jol-Nar Faction Penalty: -1 to all combat rolls\n");
+            }
+        }
+        
+        // Print applied user modifiers
+        if (!userModifiers.isEmpty()) {
             resultsArea.append("Applied modifiers: " + 
-                modifiers.stream()
+                userModifiers.stream()
                     .map(RollModifier::getFlag)
                     .collect(Collectors.joining(", ")) + "\n");
         }
@@ -467,7 +574,7 @@ public class CombatSimulator extends JFrame {
             boolean anyModified = false;
             
             for (Ship ship : ships) {
-                CombatResult result = ship.rollDice(modifiers, fleet);
+                CombatResult result = ship.rollDice(allModifiers, fleet);
                 totalHits += result.getHits();
                 allPreModifierRolls.addAll(result.getPreModifierRolls());
                 allPostModifierRolls.addAll(result.getPostModifierRolls());
@@ -504,6 +611,7 @@ public class CombatSimulator extends JFrame {
         // Reset modifiers
         for (JCheckBox checkBox : modifierCheckboxes) {
             checkBox.setSelected(false);
+            checkBox.setEnabled(true);
         }
         
         // Reset faction selection
@@ -511,6 +619,9 @@ public class CombatSimulator extends JFrame {
         
         // Clear results
         resultsArea.setText("");
+        
+        // Reset Jol-Nar flagship flag
+        hasJolNarFlagship = false;
     }
     
     private String convertFlagshipNameToCode(String flagshipName) {
@@ -546,8 +657,8 @@ public class CombatSimulator extends JFrame {
     
     private RollModifier convertToRollModifier(String text) {
         switch (text) {
-            case "-1 All Rolls": return RollModifier.MINUS_ONE_ALL;
-            case "+1 All Rolls": return RollModifier.PLUS_ONE_ALL;
+            case "Fragile (-1 to all combat rolls)": return RollModifier.MINUS_ONE_ALL;
+            case "Morale Boost (+1 to all combat rolls)": return RollModifier.PLUS_ONE_ALL;
             case "Prophecy of Ixth (+1 to fighter rolls)": return RollModifier.PLUS_ONE_FIGHTER;
             case "Fighter Prototype (+2 to fighter rolls)": return RollModifier.PLUS_TWO_FIGHTER;
             case "+2 Flagship Rolls": return RollModifier.PLUS_TWO_FLAGSHIP;
