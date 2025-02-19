@@ -70,9 +70,8 @@ public class CombatSimulator extends JFrame {
     }
     
     private static final String[] MODIFIERS = {
-        "-1 All Rolls", "+1 All Rolls", "+2 All Rolls", 
-        "+1 Fighter Rolls", "+2 Fighter Rolls", 
-        "+2 Flagship Rolls", "+2 Mech Rolls"
+        "-1 All Rolls", "+1 All Rolls","Prophecy of Ixth (+1 to fighter rolls)", 
+        "Fighter Prototype (+2 fighter rolls)", "+2 Flagship Rolls", "+2 Mech Rolls"
     };
     
     private static final Map<String, String[]> FACTION_FLAGSHIPS = new HashMap<>();
@@ -549,9 +548,8 @@ public class CombatSimulator extends JFrame {
         switch (text) {
             case "-1 All Rolls": return RollModifier.MINUS_ONE_ALL;
             case "+1 All Rolls": return RollModifier.PLUS_ONE_ALL;
-            case "+2 All Rolls": return RollModifier.PLUS_TWO_ALL;
-            case "+1 Fighter Rolls": return RollModifier.PLUS_ONE_FIGHTER;
-            case "+2 Fighter Rolls": return RollModifier.PLUS_TWO_FIGHTER;
+            case "Prophecy of Ixth (+1 to fighter rolls)": return RollModifier.PLUS_ONE_FIGHTER;
+            case "Fighter Prototype (+2 to fighter rolls)": return RollModifier.PLUS_TWO_FIGHTER;
             case "+2 Flagship Rolls": return RollModifier.PLUS_TWO_FLAGSHIP;
             case "+2 Mech Rolls": return RollModifier.PLUS_TWO_MECH;
             default: return null;
