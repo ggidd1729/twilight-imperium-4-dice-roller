@@ -7,6 +7,7 @@ Compile the program: javac CombatSimulator.java
 Run the program: java CombatSimulator (combat modifiers) (ship type) (number of ships) [(ship type) (number of ships)]
 _____________________________________________________________________________________________________________________________
 Modifiers legend:
+
 -1all: apply -1 to all combat rolls
 
 +1all: apply +1 to all combat rolls
@@ -18,6 +19,7 @@ Modifiers legend:
 +2fighter: apply +2 to all combat rolls made by fighters in this combat  
 _____________________________________________________________________________________________________________________________
 Ship legend:
+
 c: carrier
 
 c2: carrier 2
