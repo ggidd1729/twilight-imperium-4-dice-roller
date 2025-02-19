@@ -1,6 +1,6 @@
 This program is an assistive tool for the board game Twilight Imperium 4.
 It currently takes input from the command-line and rolls dice for space combat.
-Planned additions: flagship combat modifying abilities, faction choice, more combat phases, switch to GUI based interraction.  
+Planned additions: faction choice, more combat phases (space cannon, anti-fighter barrage, bombardment, ground combat), switch to GUI based interraction.  
 _____________________________________________________________________________________________________________________________
 Compile the program: javac CombatSimulator.java
 
@@ -19,6 +19,8 @@ Modifiers legend:
 +2fighter: apply +2 to all combat rolls made by fighters in this combat  
 
 +2flagship: apply +2 to all combat rolls made by flagships in this combat
+
++2mech: apply +2 to all combat rolls made by mechs in this combat
 _____________________________________________________________________________________________________________________________
 Ship legend:
 
@@ -55,3 +57,7 @@ i2: infantry 2 or Sol's Spec Ops 1
 i3: Sol's Spec Ops 2
 
 m: mech
+
+z_grav_eidolon: NRA's Space Mech
+
+hil_colish, arc_secundus, son_of_ragh, inferno, dynamo, genesis, 001, arvicon_rex, memoria2, terror_between, ysia_yssrila, salai_sai_corian, duha_menaimon, quetzecoatl, artemiris, wrath_of_kenara, fourth_moon, memoria, ouranos, loncarra_ssodu, matriarch, alastor, van_hauge, cmorran_norr, jns_hylarim, visz_el_vir: flagships
