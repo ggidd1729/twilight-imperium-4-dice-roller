@@ -32,14 +32,35 @@ public class CombatSimulator {
     }
 
     public static void main(String[] args) {
-        if (args.length < 2 || args.length % 2 != 0) {
-            System.out.println("Usage: java CombatSimulator <ship-type> <quantity> [<ship-type> <quantity> ...]");
+        if (args.length < 2) {
+            System.out.println("Usage: java CombatSimulator [<modifier>] <ship-type> <quantity> [<ship-type> <quantity> ...]");
+            System.out.println("Modifiers: -1all, +1all, +2all, +1fighter, +2fighter");
             System.exit(1);
         }
 
         List<Ship> fleet = new ArrayList<>();
+        List<RollModifier> modifiers = new ArrayList<>();
+        
+        // Check for modifiers at the beginning of arguments
+        int startIndex = 0;
+        while (startIndex < args.length) {
+            RollModifier modifier = RollModifier.fromFlag(args[startIndex]);
+            if (modifier != null) {
+                modifiers.add(modifier);
+                startIndex++;
+            } else {
+                break;
+            }
+        }
 
-        for (int i = 0; i < args.length; i += 2) {
+        // Ensure we have ship arguments after modifiers
+        if (startIndex >= args.length || (args.length - startIndex) % 2 != 0) {
+            System.out.println("Invalid ship specifications after modifiers.");
+            System.exit(1);
+        }
+
+        // Parse ships
+        for (int i = startIndex; i < args.length; i += 2) {
             try {
                 String shipType = args[i];
                 int numShips = Integer.parseInt(args[i + 1]);
@@ -59,19 +80,27 @@ public class CombatSimulator {
             System.exit(1);
         }
 
+        // Print applied modifiers
+        if (!modifiers.isEmpty()) {
+            System.out.println("Applied modifiers: " + 
+                modifiers.stream()
+                    .map(RollModifier::getFlag)
+                    .collect(Collectors.joining(", ")));
+        }
+
         System.out.println("\nRolling for combat...");
 
         Map<String, List<Ship>> groupedShips = fleet.stream()
             .collect(Collectors.groupingBy(Ship::getShipType));
 
-        AtomicInteger grandTotalHits = new AtomicInteger(0);  // Thread-safe counter
+        AtomicInteger grandTotalHits = new AtomicInteger(0);
 
         groupedShips.forEach((type, ships) -> {
             int totalHits = 0;
             List<Integer> allRolls = new ArrayList<>();
 
             for (Ship ship : ships) {
-                CombatResult result = ship.rollDice();
+                CombatResult result = ship.rollDice(modifiers);
                 totalHits += result.getHits();
                 allRolls.addAll(result.getRolls());
             }
@@ -82,10 +111,9 @@ public class CombatSimulator {
                 allRolls,
                 totalHits);
             
-            grandTotalHits.addAndGet(totalHits);  // Thread-safe addition
+            grandTotalHits.addAndGet(totalHits);
         });
 
-        // Print the grand total hits
         System.out.printf("\nTotal hits: %d%n", grandTotalHits.get());
     }
 }
