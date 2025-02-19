@@ -12,7 +12,7 @@ public class Dreadnought extends AbstractShip {
             case 1 -> 5; // Standard Dreadnought
             case 2 -> 5; // Upgraded Dreadnought
             case 3 -> 4; // L1Z1X's Super Dreadnought 2
-            default -> throw new IllegalArgumentException("Invalid mode: " + mode + ". Use 1 for standard, 2 for upgraded or SWA1 or 3 for SWA2.");
+            default -> throw new IllegalArgumentException("Invalid mode: " + mode + ". Use 1 for standard, 2 for upgraded or 3 for SD2.");
         };
     }
 }

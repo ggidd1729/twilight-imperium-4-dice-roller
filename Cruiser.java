@@ -11,7 +11,7 @@ public class Cruiser extends AbstractShip {
         return switch (mode) {
             case 1 -> 7; // Standard Cruiser
             case 2 -> 6; // Upgraded Cruiser
-            default -> throw new IllegalArgumentException("Invalid mode: " + mode + ". Use 1 for standard (7) or 2 for upgraded (6)).");
+            default -> throw new IllegalArgumentException("Invalid mode: " + mode + ". Use 1 for standard or 2 for upgraded.");
         };
     }
 }
