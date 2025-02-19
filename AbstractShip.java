@@ -15,14 +15,33 @@ public abstract class AbstractShip implements Ship {
         this.random = new Random();
     }
 
-    public CombatResult rollDice(List<RollModifier> modifiers) {
+    public CombatResult rollDice(List<RollModifier> modifiers, List<Ship> fleet) {
         List<Integer> rolls = new ArrayList<>();
         int hits = 0;
+        int extraDice = 0;
+
+        // Check for NRA ability (Visz el Vir affecting Z Grav Eidolons)
+        if (this instanceof Mech && isNRAFlagshipPresent(fleet)) {
+            extraDice = 1; // Add one extra die for Z Grav Eidolons
+        }
+
+        int totalDice = numDice + extraDice;
         
-        for (int i = 0; i < numDice; i++) {
+        for (int i = 0; i < totalDice; i++) {
             int roll = random.nextInt(10) + 1; // Roll d10 (1-10)
             
-            // Apply modifiers
+            // Check for Jol-Nar ability before modifiers
+            int naturalHits = 0;
+            if (this instanceof Flagship && isJolNarFlagshipPresent(fleet) && (roll == 9 || roll == 10)) {
+                naturalHits = 2; // Add 2 hits for natural 9 or 10
+            }
+            
+            // Apply Sardakk modifier if present (but not to itself)
+            if (isSardakkFlagshipPresent(fleet) && !(this instanceof Flagship)) {
+                roll += 1;
+            }
+            
+            // Apply regular modifiers
             roll = applyModifiers(roll, modifiers);
             
             // Ensure roll stays within 1-10 range
@@ -32,9 +51,27 @@ public abstract class AbstractShip implements Ship {
             if (roll >= combatValue) {
                 hits++;
             }
+            
+            // Add Jol-Nar natural hits
+            hits += naturalHits;
         }
         
         return new CombatResult(rolls, hits);
+    }
+
+    private boolean isJolNarFlagshipPresent(List<Ship> fleet) {
+        return fleet.stream().anyMatch(ship -> 
+            ship instanceof Flagship && ((Flagship)ship).isJolNar());
+    }
+
+    private boolean isSardakkFlagshipPresent(List<Ship> fleet) {
+        return fleet.stream().anyMatch(ship -> 
+            ship instanceof Flagship && ((Flagship)ship).isSardakk());
+    }
+
+    private boolean isNRAFlagshipPresent(List<Ship> fleet) {
+        return fleet.stream().anyMatch(ship -> 
+            ship instanceof Flagship && ((Flagship)ship).isNRA());
     }
 
     private int applyModifiers(int roll, List<RollModifier> modifiers) {

@@ -22,15 +22,17 @@ public class CombatSimulator {
             case "i2" -> new Infantry(2);
             case "i3" -> new Infantry(3);
             case "m" -> new Mech();
+            case "z_grav_eidolon" -> new Mech(2, 8);
             case "hil_colish" -> new Flagship(1, 5);
             case "arc_secundus", "son_of_ragh", "inferno", "dynamo", "genesis", "001", 
                  "arvicon_rex", "memoria2", "terror_between", "ysia_yssrila" -> new Flagship(2, 5);
-            case "cmorran_norr", "jns_hylarim" -> new Flagship(2, 6);
             case "salai_sai_corian" -> new Flagship(1, 7);
             case "duha_menaimon", "quetzecoatl", "artemiris", "wrath_of_kenara", 
                  "fourth_moon", "memoria", "ouranos", "loncarra_ssodu" -> new Flagship(2, 7);
-            case "matriarch", "visz_el_vir", "alastor", "van_hauge" -> new Flagship(2, 9);
-            case "z_grav_eidolon" -> new Mech(2, 8);
+            case "matriarch", "alastor", "van_hauge" -> new Flagship(2, 9);
+            case "cmorran_norr" -> new Flagship(2, 6, "C'Morran N'orr");
+            case "jns_hylarim" -> new Flagship(2, 6, "J.N.S. Hylarim");
+            case "visz_el_vir" -> new Flagship(2, 9, "Visz el Vir");
             default -> throw new IllegalArgumentException("Unknown ship type: " + type);
         };
     }
@@ -104,7 +106,7 @@ public class CombatSimulator {
             List<Integer> allRolls = new ArrayList<>();
 
             for (Ship ship : ships) {
-                CombatResult result = ship.rollDice(modifiers);
+                CombatResult result = ship.rollDice(modifiers, fleet);
                 totalHits += result.getHits();
                 allRolls.addAll(result.getRolls());
             }
