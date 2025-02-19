@@ -4,7 +4,8 @@ enum RollModifier {
     PLUS_TWO_ALL("+2all"),
     PLUS_ONE_FIGHTER("+1fighter"),
     PLUS_TWO_FIGHTER("+2fighter"),
-    PLUS_TWO_FLAGSHIP("+2flagship");
+    PLUS_TWO_FLAGSHIP("+2flagship"),
+    PLUS_TWO_MECH("+2mech");
 
     private final String flag;
 

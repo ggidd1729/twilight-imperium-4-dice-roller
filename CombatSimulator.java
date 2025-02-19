@@ -34,7 +34,7 @@ public class CombatSimulator {
     public static void main(String[] args) {
         if (args.length < 2) {
             System.out.println("Usage: java CombatSimulator [<modifier>] <ship-type> <quantity> [<ship-type> <quantity> ...]");
-            System.out.println("Modifiers: -1all, +1all, +2all, +1fighter, +2fighter");
+            System.out.println("Modifiers: -1all, +1all, +2all, +1fighter, +2fighter, +2flagship, +2mech");
             System.exit(1);
         }
 

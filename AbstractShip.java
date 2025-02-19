@@ -63,7 +63,11 @@ public abstract class AbstractShip implements Ship {
                     break;
                 case PLUS_TWO_FLAGSHIP:
                     if (this instanceof Flagship) {
-                        modifiedRoll +=2;
+                        modifiedRoll += 2;
+                    }
+                case PLUS_TWO_MECH:
+                    if (this instanceof Mech) {
+                        modifiedRoll += 2;
                     }
             }
         }
