@@ -1,13 +1,11 @@
 This program is an assistive tool for the board game Twilight Imperium 4.
 It currently takes input from the command-line and rolls dice for space combat.
 Planned additions: flagship combat modifying abilities, faction choice, more combat phases, switch to GUI based interraction.  
-
-
+_____________________________________________________________________________________________________________________________
 Compile the program: javac CombatSimulator.java
 
-Run the program: java CombatSimulator (combat modifiers) (ship type) (number of ships) [(ship type) (number of ships)]  
-
-
+Run the program: java CombatSimulator (combat modifiers) (ship type) (number of ships) [(ship type) (number of ships)]
+_____________________________________________________________________________________________________________________________
 Modifiers legend:
 -1all: apply -1 to all combat rolls
 
@@ -18,8 +16,7 @@ Modifiers legend:
 +1fighter: apply +1 to all combat rolls made by fighters in this combat
 
 +2fighter: apply +2 to all combat rolls made by fighters in this combat  
-
-
+_____________________________________________________________________________________________________________________________
 Ship legend:
 c: carrier
 
