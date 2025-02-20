@@ -242,7 +242,7 @@ public class CombatSimulator extends JFrame {
         JPanel contentPanel = new JPanel();
         contentPanel.setLayout(new BorderLayout());
         contentPanel.setOpaque(false);
-        contentPanel.setBorder(new EmptyBorder(20, 20, 20, 20));
+        contentPanel.setBorder(new EmptyBorder(15, 15, 15, 15));
         
         // North Panel - Search and Faction Selection
         JPanel northPanel = new JPanel(new BorderLayout());
