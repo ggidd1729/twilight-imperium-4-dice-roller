@@ -314,65 +314,6 @@ public class CombatSimulator extends JFrame {
         });
         factionPanel.add(factionComboBox);
 
-        // Update search field key listener to handle selection properly
-        searchField.addKeyListener(new KeyAdapter() {
-            @Override
-            public void keyPressed(KeyEvent e) {
-                int keyCode = e.getKeyCode();
-                
-                // Only process if the dropdown is visible
-                if (factionComboBox.isPopupVisible()) {
-                    switch (keyCode) {
-                        case KeyEvent.VK_DOWN:
-                            // Move highlight to next item without selecting
-                            int nextIndex = (factionComboBox.getSelectedIndex() + 1) % factionComboBox.getModel().getSize();
-                            factionComboBox.setSelectedIndex(nextIndex);
-                            // Cancel automatic selection
-                            e.consume();
-                            break;
-                            
-                        case KeyEvent.VK_UP:
-                            // Move highlight to previous item without selecting
-                            int currentIndex = factionComboBox.getSelectedIndex();
-                            if (currentIndex > 0) {
-                                factionComboBox.setSelectedIndex(currentIndex - 1);
-                            } else {
-                                // Wrap around to bottom
-                                factionComboBox.setSelectedIndex(factionComboBox.getModel().getSize() - 1);
-                            }
-                            // Cancel automatic selection
-                            e.consume();
-                            break;
-                            
-                        case KeyEvent.VK_ENTER:
-                            // Explicitly commit the selection of the highlighted item
-                            Object highlightedItem = factionComboBox.getSelectedItem();
-                            SearchableComboBoxModel model = (SearchableComboBoxModel) factionComboBox.getModel();
-                            model.setSelectedItem(highlightedItem);
-                            
-                            // Update the UI based on the new selection
-                            updateShipSelectionForFaction();
-                            updateModifiersForFaction();
-                            checkForJolNarFlagship();
-                            
-                            // Close dropdown
-                            factionComboBox.setPopupVisible(false);
-                            // Transfer focus back to main panel
-                            mainPanel.requestFocusInWindow();
-                            break;
-                            
-                        case KeyEvent.VK_ESCAPE:
-                            // Just close the dropdown without changing selection
-                            factionComboBox.setPopupVisible(false);
-                            break;
-                    }
-                } else if (keyCode == KeyEvent.VK_DOWN) {
-                    // If dropdown isn't visible, show it when pressing down arrow
-                    factionComboBox.setPopupVisible(true);
-                }
-            }
-        });
-
         // Also update the JComboBox itself to handle mouse selection properly
         factionComboBox.addMouseListener(new java.awt.event.MouseAdapter() {
             @Override
@@ -419,37 +360,46 @@ public class CombatSimulator extends JFrame {
             public void keyPressed(KeyEvent e) {
                 int keyCode = e.getKeyCode();
                 
-                // Only process if the dropdown is visible
                 if (factionComboBox.isPopupVisible()) {
                     switch (keyCode) {
                         case KeyEvent.VK_DOWN:
-                            // Select next item
-                            int currentIndex = factionComboBox.getSelectedIndex();
-                            int nextIndex = (currentIndex + 1) % factionComboBox.getModel().getSize();
-                            factionComboBox.setSelectedIndex(nextIndex);
+                            // Move to next item without looping
+                            int nextIndex = factionComboBox.getSelectedIndex() + 1;
+                            if (nextIndex < factionComboBox.getModel().getSize()) {
+                                factionComboBox.setSelectedIndex(nextIndex);
+                            }
+                            // Prevent default behavior
+                            e.consume();
                             break;
                             
                         case KeyEvent.VK_UP:
-                            // Select previous item
-                            currentIndex = factionComboBox.getSelectedIndex();
-                            if (currentIndex > 0) {
-                                factionComboBox.setSelectedIndex(currentIndex - 1);
-                            } else {
-                                // Wrap around to bottom
-                                factionComboBox.setSelectedIndex(factionComboBox.getModel().getSize() - 1);
+                            // Move to previous item without looping
+                            int prevIndex = factionComboBox.getSelectedIndex() - 1;
+                            if (prevIndex >= 0) {
+                                factionComboBox.setSelectedIndex(prevIndex);
                             }
+                            // Prevent default behavior
+                            e.consume();
                             break;
                             
                         case KeyEvent.VK_ENTER:
-                            // Select current item and close dropdown
-                            // This will automatically trigger the actionListener
+                            // Explicitly commit selection
+                            Object selectedItem = factionComboBox.getSelectedItem();
+                            SearchableComboBoxModel model = (SearchableComboBoxModel) factionComboBox.getModel();
+                            model.setSelectedItem(selectedItem);
+                            
+                            // Update UI based on selection
+                            updateShipSelectionForFaction();
+                            updateModifiersForFaction();
+                            checkForJolNarFlagship();
+                            
+                            // Close dropdown and shift focus
                             factionComboBox.setPopupVisible(false);
-                            // Transfer focus back to main panel to avoid further input to search field
                             mainPanel.requestFocusInWindow();
                             break;
                             
                         case KeyEvent.VK_ESCAPE:
-                            // Just close the dropdown
+                            // Close dropdown without changing selection
                             factionComboBox.setPopupVisible(false);
                             break;
                     }
