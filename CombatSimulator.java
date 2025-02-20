@@ -1,15 +1,23 @@
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import javax.swing.border.TitledBorder;
+import javax.swing.event.DocumentEvent;
+import javax.swing.event.DocumentListener;
 import java.awt.*;
 import java.util.*;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
+import java.awt.event.KeyAdapter;
+import java.awt.event.KeyEvent;
+import java.awt.event.FocusAdapter;
+import java.awt.event.FocusEvent;
+
 
 public class CombatSimulator extends JFrame {
     private JPanel shipSelectionPanel;
     private JComboBox<String> factionComboBox;
+    private JTextField searchField;
     private JTextArea resultsArea;
     private JPanel modifiersPanel;
     private Map<String, JSpinner> shipQuantities = new HashMap<>();
@@ -162,6 +170,41 @@ public class CombatSimulator extends JFrame {
         UNIT_NAME_TO_CODE.put("Z-Grav Eidolon", "z_grav_eidolon");
     }
     
+    // Custom combo box model to implement search functionality
+    private class SearchableComboBoxModel extends DefaultComboBoxModel<String> {
+        private final String[] allItems;
+        private String filterText = "";
+        
+        public SearchableComboBoxModel(String[] items) {
+            super(items);
+            this.allItems = items.clone();
+        }
+        
+        public void setFilter(String filter) {
+            this.filterText = filter.toLowerCase();
+            updateFilteredItems();
+        }
+        
+        private void updateFilteredItems() {
+            removeAllElements();
+            
+            // If filter is empty, add all items
+            if (filterText.isEmpty()) {
+                for (String item : allItems) {
+                    addElement(item);
+                }
+                return;
+            }
+            
+            // Add only items that match the filter
+            for (String item : allItems) {
+                if (item.toLowerCase().contains(filterText)) {
+                    addElement(item);
+                }
+            }
+        }
+    }
+    
     public CombatSimulator() {
         setTitle("Twilight Imperium 4 Combat Simulator");
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -201,24 +244,142 @@ public class CombatSimulator extends JFrame {
         contentPanel.setOpaque(false);
         contentPanel.setBorder(new EmptyBorder(20, 20, 20, 20));
         
-        // North Panel - Faction Selection
-        JPanel northPanel = new JPanel(new FlowLayout(FlowLayout.CENTER));
+        // North Panel - Search and Faction Selection
+        JPanel northPanel = new JPanel(new BorderLayout());
         northPanel.setOpaque(false);
+        
+        // Search Panel
+        JPanel searchPanel = new JPanel(new FlowLayout(FlowLayout.CENTER));
+        searchPanel.setOpaque(false);
+        
+        JLabel searchLabel = new JLabel("Search Faction:");
+        searchLabel.setForeground(Color.WHITE);
+        searchLabel.setFont(new Font("Monospaced", Font.BOLD, 16));
+        searchPanel.add(searchLabel);
+        
+        searchField = new JTextField(15);
+        searchField.setFont(new Font("Monospaced", Font.PLAIN, 16));
+        searchPanel.add(searchField);
+        
+        // Faction Selection Panel
+        JPanel factionPanel = new JPanel(new FlowLayout(FlowLayout.CENTER));
+        factionPanel.setOpaque(false);
         
         JLabel factionLabel = new JLabel("Select Faction:");
         factionLabel.setForeground(Color.WHITE);
         factionLabel.setFont(new Font("Monospaced", Font.BOLD, 16));
-        northPanel.add(factionLabel);
+        factionPanel.add(factionLabel);
         
-        // Make faction combo box larger
-        factionComboBox = new JComboBox<>(FACTIONS);
+        // Initialize the combo box with the searchable model
+        SearchableComboBoxModel comboBoxModel = new SearchableComboBoxModel(FACTIONS);
+        factionComboBox = new JComboBox<>(comboBoxModel);
         factionComboBox.setFont(new Font("Monospaced", Font.PLAIN, 16));
+        factionComboBox.setMaximumRowCount(10); // Show more items in the dropdown
+        factionComboBox.setPreferredSize(new Dimension(300, 30));
+        
+        // Add listener to update based on faction selection
         factionComboBox.addActionListener(e -> {
             updateShipSelectionForFaction();
             updateModifiersForFaction();
             checkForJolNarFlagship();
         });
-        northPanel.add(factionComboBox);
+        factionPanel.add(factionComboBox);
+        
+        // Add search functionality
+        searchField.getDocument().addDocumentListener(new DocumentListener() {
+            @Override
+            public void insertUpdate(DocumentEvent e) {
+                updateSearch();
+            }
+
+            @Override
+            public void removeUpdate(DocumentEvent e) {
+                updateSearch();
+            }
+
+            @Override
+            public void changedUpdate(DocumentEvent e) {
+                updateSearch();
+            }
+            
+            private void updateSearch() {
+                String searchText = searchField.getText();
+                SearchableComboBoxModel model = (SearchableComboBoxModel) factionComboBox.getModel();
+                model.setFilter(searchText);
+                
+                // If there's only one item left after filtering, select it automatically
+                if (model.getSize() == 1 && !searchText.isEmpty()) {
+                    factionComboBox.setSelectedIndex(0);
+                }
+                
+                // Make sure the popup is visible when typing
+                if (model.getSize() > 0 && !searchText.isEmpty()) {
+                    factionComboBox.setPopupVisible(true);
+                }
+            }
+        });
+
+        // Add key listeners to the search field for keyboard navigation
+        searchField.addKeyListener(new KeyAdapter() {
+            @Override
+            public void keyPressed(KeyEvent e) {
+                int keyCode = e.getKeyCode();
+                
+                // Only process if the dropdown is visible
+                if (factionComboBox.isPopupVisible()) {
+                    switch (keyCode) {
+                        case KeyEvent.VK_DOWN:
+                            // Select next item
+                            int currentIndex = factionComboBox.getSelectedIndex();
+                            int nextIndex = (currentIndex + 1) % factionComboBox.getModel().getSize();
+                            factionComboBox.setSelectedIndex(nextIndex);
+                            break;
+                            
+                        case KeyEvent.VK_UP:
+                            // Select previous item
+                            currentIndex = factionComboBox.getSelectedIndex();
+                            if (currentIndex > 0) {
+                                factionComboBox.setSelectedIndex(currentIndex - 1);
+                            } else {
+                                // Wrap around to bottom
+                                factionComboBox.setSelectedIndex(factionComboBox.getModel().getSize() - 1);
+                            }
+                            break;
+                            
+                        case KeyEvent.VK_ENTER:
+                            // Select current item and close dropdown
+                            // This will automatically trigger the actionListener
+                            factionComboBox.setPopupVisible(false);
+                            // Transfer focus back to main panel to avoid further input to search field
+                            mainPanel.requestFocusInWindow();
+                            break;
+                            
+                        case KeyEvent.VK_ESCAPE:
+                            // Just close the dropdown
+                            factionComboBox.setPopupVisible(false);
+                            break;
+                    }
+                } else if (keyCode == KeyEvent.VK_DOWN) {
+                    // If dropdown isn't visible, show it when pressing down arrow
+                    factionComboBox.setPopupVisible(true);
+                }
+            }
+        });
+
+        // Add focus listener to improve search field behavior
+        searchField.addFocusListener(new FocusAdapter() {
+            @Override
+            public void focusGained(FocusEvent e) {
+                // When search field gets focus, show dropdown if there are filtered results
+                SearchableComboBoxModel model = (SearchableComboBoxModel) factionComboBox.getModel();
+                if (model.getSize() > 0 && !searchField.getText().isEmpty()) {
+                    factionComboBox.setPopupVisible(true);
+                }
+            }
+        });
+        
+        northPanel.add(searchPanel, BorderLayout.NORTH);
+        northPanel.add(factionPanel, BorderLayout.CENTER);
         
         contentPanel.add(northPanel, BorderLayout.NORTH);
         
@@ -685,6 +846,9 @@ public class CombatSimulator extends JFrame {
         
         // Reset faction selection
         factionComboBox.setSelectedIndex(0);
+
+        // Clear the search field
+        searchField.setText("");
         
         // Clear results
         resultsArea.setText("");
