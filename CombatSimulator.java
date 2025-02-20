@@ -299,13 +299,90 @@ public class CombatSimulator extends JFrame {
         factionComboBox.setMaximumRowCount(10); // Show more items in the dropdown
         factionComboBox.setPreferredSize(new Dimension(300, 30));
         
-        // Add listener to update based on faction selection
+        // Disable automatic selection when using keyboard navigation
+        factionComboBox.putClientProperty("JComboBox.isTableCellEditor", Boolean.TRUE);
+
+        // Modify the factionComboBox actionListener
         factionComboBox.addActionListener(e -> {
-            updateShipSelectionForFaction();
-            updateModifiersForFaction();
-            checkForJolNarFlagship();
+            // Only update ships and modifiers if the event was triggered by user selection
+            // and not just by highlighting with arrow keys
+            if (e.getActionCommand().equals("comboBoxEdited") || e.getModifiers() != 0) {
+                updateShipSelectionForFaction();
+                updateModifiersForFaction();
+                checkForJolNarFlagship();
+            }
         });
         factionPanel.add(factionComboBox);
+
+        // Update search field key listener to handle selection properly
+        searchField.addKeyListener(new KeyAdapter() {
+            @Override
+            public void keyPressed(KeyEvent e) {
+                int keyCode = e.getKeyCode();
+                
+                // Only process if the dropdown is visible
+                if (factionComboBox.isPopupVisible()) {
+                    switch (keyCode) {
+                        case KeyEvent.VK_DOWN:
+                            // Move highlight to next item without selecting
+                            int nextIndex = (factionComboBox.getSelectedIndex() + 1) % factionComboBox.getModel().getSize();
+                            factionComboBox.setSelectedIndex(nextIndex);
+                            // Cancel automatic selection
+                            e.consume();
+                            break;
+                            
+                        case KeyEvent.VK_UP:
+                            // Move highlight to previous item without selecting
+                            int currentIndex = factionComboBox.getSelectedIndex();
+                            if (currentIndex > 0) {
+                                factionComboBox.setSelectedIndex(currentIndex - 1);
+                            } else {
+                                // Wrap around to bottom
+                                factionComboBox.setSelectedIndex(factionComboBox.getModel().getSize() - 1);
+                            }
+                            // Cancel automatic selection
+                            e.consume();
+                            break;
+                            
+                        case KeyEvent.VK_ENTER:
+                            // Explicitly commit the selection of the highlighted item
+                            Object highlightedItem = factionComboBox.getSelectedItem();
+                            SearchableComboBoxModel model = (SearchableComboBoxModel) factionComboBox.getModel();
+                            model.setSelectedItem(highlightedItem);
+                            
+                            // Update the UI based on the new selection
+                            updateShipSelectionForFaction();
+                            updateModifiersForFaction();
+                            checkForJolNarFlagship();
+                            
+                            // Close dropdown
+                            factionComboBox.setPopupVisible(false);
+                            // Transfer focus back to main panel
+                            mainPanel.requestFocusInWindow();
+                            break;
+                            
+                        case KeyEvent.VK_ESCAPE:
+                            // Just close the dropdown without changing selection
+                            factionComboBox.setPopupVisible(false);
+                            break;
+                    }
+                } else if (keyCode == KeyEvent.VK_DOWN) {
+                    // If dropdown isn't visible, show it when pressing down arrow
+                    factionComboBox.setPopupVisible(true);
+                }
+            }
+        });
+
+        // Also update the JComboBox itself to handle mouse selection properly
+        factionComboBox.addMouseListener(new java.awt.event.MouseAdapter() {
+            @Override
+            public void mouseClicked(java.awt.event.MouseEvent evt) {
+                // When mouse clicked, confirm the selection and update UI
+                updateShipSelectionForFaction();
+                updateModifiersForFaction();
+                checkForJolNarFlagship();
+            }
+        });
         
         // Add search functionality
         searchField.getDocument().addDocumentListener(new DocumentListener() {
@@ -328,11 +405,6 @@ public class CombatSimulator extends JFrame {
                 String searchText = searchField.getText();
                 SearchableComboBoxModel model = (SearchableComboBoxModel) factionComboBox.getModel();
                 model.setFilter(searchText);
-                
-                // If there's only one item left after filtering, select it automatically
-                if (model.getSize() == 1 && !searchText.isEmpty()) {
-                    factionComboBox.setSelectedIndex(0);
-                }
                 
                 // Make sure the popup is visible when typing
                 if (model.getSize() > 0 && !searchText.isEmpty()) {
