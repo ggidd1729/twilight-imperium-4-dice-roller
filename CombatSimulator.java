@@ -41,6 +41,7 @@ public class CombatSimulator extends JFrame {
         BASE_SHIP_TYPES.put("Destroyer", new String[]{"Destroyer I", "Destroyer II"});
         BASE_SHIP_TYPES.put("Dreadnought", new String[]{"Dreadnought I", "Dreadnought II"});
         BASE_SHIP_TYPES.put("Fighter", new String[]{"Fighter I", "Fighter II"});
+        BASE_SHIP_TYPES.put("War Sun", new String[]{"War Sun"});
         // Infantry and Mech only for Nekro by default
         BASE_SHIP_TYPES.put("Infantry", new String[]{"Infantry I", "Infantry II/Spec Ops I"});
         BASE_SHIP_TYPES.put("Mech", new String[]{"Mech"});
@@ -49,6 +50,26 @@ public class CombatSimulator extends JFrame {
     // Faction-specific unit overrides
     private static final Map<String, Map<String, String[]>> FACTION_SPECIFIC_UNITS = new HashMap<>();
     static {
+        // Sardakk N'orr - Exotriremes
+        Map<String, String[]> sardakkUnits = new HashMap<>();
+        sardakkUnits.put("Dreadnought", new String[]{"Exotrireme I", "Exotrireme II"});
+        FACTION_SPECIFIC_UNITS.put("The Sardakk N'orr", sardakkUnits);
+
+        // Federation of Sol - Advanced Carriers
+        Map<String, String[]> solUnits = new HashMap<>();
+        solUnits.put("Carrier", new String[]{"Advanced Carrier I", "Advanced Carrier II"});
+        FACTION_SPECIFIC_UNITS.put("The Federation of Sol", solUnits);
+
+        // Embers of Muaat - Prototype War Suns
+        Map<String, String[]> muaatUnits = new HashMap<>();
+        muaatUnits.put("War Sun", new String[]{"Prototype War Sun I", "Prototype War Sun II"});
+        FACTION_SPECIFIC_UNITS.put("The Embers of Muaat", muaatUnits);
+
+        // Titans of Ul - Saturn Engines
+        Map<String, String[]> ulUnits = new HashMap<>();
+        ulUnits.put("Cruiser", new String[]{"Saturn Engine I", "Saturn Engine II"});
+        FACTION_SPECIFIC_UNITS.put("The Titans of Ul", ulUnits);
+
         // L1Z1X Mindnet - Super Dreadnoughts
         Map<String, String[]> l1z1xUnits = new HashMap<>();
         l1z1xUnits.put("Dreadnought", new String[]{"Super Dreadnought I", "Super Dreadnought II"});
@@ -159,8 +180,17 @@ public class CombatSimulator extends JFrame {
         UNIT_NAME_TO_CODE.put("Infantry II/Spec Ops I", "i2");
         UNIT_NAME_TO_CODE.put("Spec Ops II", "i3");
         UNIT_NAME_TO_CODE.put("Mech", "m");
+        UNIT_NAME_TO_CODE.put("War Sun", "ws");
         
         // Faction-specific units
+        UNIT_NAME_TO_CODE.put("Exotrireme", "dr");
+        UNIT_NAME_TO_CODE.put("Exotrireme II", "dr");
+        UNIT_NAME_TO_CODE.put("Advanced Carrier I", "c");
+        UNIT_NAME_TO_CODE.put("Advanced Carrier II", "c");
+        UNIT_NAME_TO_CODE.put("Prototype War Sun I", "ws");
+        UNIT_NAME_TO_CODE.put("Prototype War Sun II", "ws");
+        UNIT_NAME_TO_CODE.put("Saturn Engine I", "cr");
+        UNIT_NAME_TO_CODE.put("Saturn Engine II", "cr2");
         UNIT_NAME_TO_CODE.put("Super Dreadnought I", "dr2");
         UNIT_NAME_TO_CODE.put("Super Dreadnought II", "dr3");
         UNIT_NAME_TO_CODE.put("Hybrid Crystal Fighter I", "f2");
@@ -670,6 +700,7 @@ public class CombatSimulator extends JFrame {
         addShipToPanel("Dreadnought II");
         addShipToPanel("Fighter I");
         addShipToPanel("Fighter II");
+        addShipToPanel("War Sun");
         
         shipSelectionPanel.revalidate();
         shipSelectionPanel.repaint();
@@ -915,6 +946,7 @@ public class CombatSimulator extends JFrame {
             case "i2" -> new Infantry(2);
             case "i3" -> new Infantry(3);
             case "m" -> new Mech();
+            case "ws" -> new WarSun();
             case "z_grav_eidolon" -> new Mech(2, 8);
             case "hil_colish" -> new Flagship(1, 5);
             case "arc_secundus", "son_of_ragh", "inferno", "dynamo", "genesis", "001", 
