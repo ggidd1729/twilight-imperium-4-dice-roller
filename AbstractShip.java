@@ -93,6 +93,9 @@ public abstract class AbstractShip implements Ship {
                 case PLUS_ONE_ALL:
                     modifiedRoll += 1;
                     break;
+                case PLUS_TWO_ALL:
+                    modifiedRoll += 2;
+                    break;
                 case PLUS_ONE_FIGHTER:
                     if (this instanceof Fighter) {
                         modifiedRoll += 1;

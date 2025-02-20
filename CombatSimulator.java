@@ -105,11 +105,18 @@ public class CombatSimulator extends JFrame {
 
     private static final Map<String, String> FACTION_SPECIFIC_MODIFIERS = new HashMap<>(); 
     static {
-        FACTION_SPECIFIC_MODIFIERS.put("The Mahact Gene-Sorcerers", "<html>Arvicon Rex's Ability<br>(+2 to it's combat rolls)</html>");
-        FACTION_SPECIFIC_MODIFIERS.put("The Nekro Virus", "<html>Nekro Mech's Ability<br>(+2 to their combat rolls)</html>");
+        FACTION_SPECIFIC_MODIFIERS.put("The Mahact Gene-Sorcerers", 
+                                     "<html>Arvicon Rex's Ability<br>(+2 to it's combat rolls)</html>");
+        FACTION_SPECIFIC_MODIFIERS.put("The Nekro Virus", 
+                                     "<html>Nekro Mech's Ability<br>(+2 to their combat rolls)</html>");
+        FACTION_SPECIFIC_MODIFIERS.put("The Naaz-Rokha Alliance", 
+                                     "<html>Supercharge Technology<br>(+1 to all combat rolls)</html>");
+        FACTION_SPECIFIC_MODIFIERS.put("The Winnu", 
+                                     "<html>Commander Rickar Rickani<br>(+2 to all combat rolls)</html>");
     };
 
-    Set<String> modifierFactions = Set.of("The Mahact Gene-Sorcerers", "The Nekro Virus");
+    Set<String> modifierFactions = Set.of("The Mahact Gene-Sorcerers", "The Nekro Virus",
+                                          "The Naaz-Rokha Alliance", "The Winnu");
     
     // Define faction abilities as RollModifiers
     private static final Map<String, List<RollModifier>> FACTION_ABILITIES = new HashMap<>();
@@ -946,6 +953,8 @@ public class CombatSimulator extends JFrame {
         if (text.contains("Fighter Prototype")) return RollModifier.PLUS_TWO_FIGHTER;
         if (text.contains("Arvicon Rex's Ability")) return RollModifier.PLUS_TWO_FLAGSHIP;
         if (text.contains("Nekro Mech's Ability")) return RollModifier.PLUS_TWO_MECH;
+        if (text.contains("Supercharge Technology")) return RollModifier.PLUS_ONE_ALL;
+        if (text.contains("Commander Rickar Rickani")) return RollModifier.PLUS_TWO_ALL;
         return null;
     }
     
