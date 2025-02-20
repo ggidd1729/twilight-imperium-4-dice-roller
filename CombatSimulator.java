@@ -100,24 +100,16 @@ public class CombatSimulator extends JFrame {
     private static final String[] MODIFIERS = {
         "<html>Morale Boost<br>(+1 to all combat rolls)</html>", 
         "<html>Prophecy of Ixth<br>(+1 to fighter rolls)</html>", 
-        "<html>Fighter Prototype<br>(+2 to fighter rolls)</html>", 
-        "+2 Flagship Rolls", 
-        "+2 Mech Rolls"
+        "<html>Fighter Prototype<br>(+2 to fighter rolls)</html>"
     };
-    
-    // Map of modifiers that should be enabled/disabled based on faction
-    private static final Map<String, Set<String>> FACTION_RESTRICTED_MODIFIERS = new HashMap<>();
+
+    private static final Map<String, String> FACTION_SPECIFIC_MODIFIERS = new HashMap<>(); 
     static {
-        // Mahact Gene-Sorcerers - Only they can use +2 Flagship Rolls
-        Set<String> mahactModifiers = new HashSet<>();
-        mahactModifiers.add("+2 Flagship Rolls");
-        FACTION_RESTRICTED_MODIFIERS.put("The Mahact Gene-Sorcerers", mahactModifiers);
-        
-        // Nekro Virus - Only they can use +2 Mech Rolls
-        Set<String> nekroModifiers = new HashSet<>();
-        nekroModifiers.add("+2 Mech Rolls");
-        FACTION_RESTRICTED_MODIFIERS.put("The Nekro Virus", nekroModifiers);
-    }
+        FACTION_SPECIFIC_MODIFIERS.put("The Mahact Gene-Sorcerers", "<html>Arvicon Rex's Ability<br>(+2 to it's combat rolls)</html>");
+        FACTION_SPECIFIC_MODIFIERS.put("The Nekro Virus", "<html>Nekro Mech's Ability<br>(+2 to their combat rolls)</html>");
+    };
+
+    Set<String> modifierFactions = Set.of("The Mahact Gene-Sorcerers", "The Nekro Virus");
     
     // Define faction abilities as RollModifiers
     private static final Map<String, List<RollModifier>> FACTION_ABILITIES = new HashMap<>();
@@ -630,33 +622,39 @@ public class CombatSimulator extends JFrame {
     
     private void updateModifiersForFaction() {
         String selectedFaction = (String) factionComboBox.getSelectedItem();
+    
+        // Clear all existing modifiers
+        modifiersPanel.removeAll();
+        modifierCheckboxes.clear();
         
-        // Reset all modifiers
-        for (JCheckBox checkBox : modifierCheckboxes) {
-            checkBox.setSelected(false);
-            checkBox.setEnabled(true);
-        }
-        
-        if (selectedFaction == null || selectedFaction.equals("Select Faction")) {
-            return;
-        }
-        
-        // For each modifier checkbox
-        for (JCheckBox checkBox : modifierCheckboxes) {
-            String modifierText = checkBox.getText();
+        // Re-add the standard modifiers
+        for (String modifier : MODIFIERS) {
+            JCheckBox checkBox = new JCheckBox(modifier);
+            checkBox.setForeground(Color.WHITE);
+            checkBox.setFont(new Font("Monospaced", Font.PLAIN, 13));
+            checkBox.setOpaque(false);
             
-            // Handle +2 Flagship Rolls - only available to Mahact
-            if (modifierText.equals("+2 Flagship Rolls") && 
-                !selectedFaction.equals("The Mahact Gene-Sorcerers")) {
-                checkBox.setEnabled(false);
-            }
-            
-            // Handle +2 Mech Rolls - only available to Nekro
-            if (modifierText.equals("+2 Mech Rolls") && 
-                !selectedFaction.equals("The Nekro Virus")) {
-                checkBox.setEnabled(false);
+            modifiersPanel.add(checkBox);
+            modifierCheckboxes.add(checkBox);
+        }
+        
+        // Add faction-specific modifiers if needed
+        if (selectedFaction != null && !selectedFaction.equals("Select Faction")) {
+            if (modifierFactions.contains(selectedFaction)) {
+                String modifier = FACTION_SPECIFIC_MODIFIERS.get(selectedFaction);
+    
+                JCheckBox checkBox = new JCheckBox(modifier);
+                checkBox.setForeground(Color.WHITE);
+                checkBox.setFont(new Font("Monospaced", Font.PLAIN, 13));
+                checkBox.setOpaque(false);
+                
+                modifiersPanel.add(checkBox);
+                modifierCheckboxes.add(checkBox);
             }
         }
+        
+        modifiersPanel.revalidate();
+        modifiersPanel.repaint();
     }
     
     private void addShipToPanel(String shipName) {
@@ -715,6 +713,7 @@ public class CombatSimulator extends JFrame {
             checkBox.setForeground(Color.WHITE);
             checkBox.setFont(new Font("Monospaced", Font.PLAIN, 13));
             checkBox.setOpaque(false);
+            
             modifiersPanel.add(checkBox);
             modifierCheckboxes.add(checkBox);
         }
@@ -923,8 +922,8 @@ public class CombatSimulator extends JFrame {
         if (text.contains("Morale Boost")) return RollModifier.PLUS_ONE_ALL;
         if (text.contains("Prophecy of Ixth")) return RollModifier.PLUS_ONE_FIGHTER;
         if (text.contains("Fighter Prototype")) return RollModifier.PLUS_TWO_FIGHTER;
-        if (text.contains("+2 Flagship Rolls")) return RollModifier.PLUS_TWO_FLAGSHIP;
-        if (text.contains("+2 Mech Rolls")) return RollModifier.PLUS_TWO_MECH;
+        if (text.contains("Arvicon Rex's Ability")) return RollModifier.PLUS_TWO_FLAGSHIP;
+        if (text.contains("Nekro Mech's Ability")) return RollModifier.PLUS_TWO_MECH;
         return null;
     }
     
