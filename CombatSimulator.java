@@ -6,6 +6,7 @@ import javax.swing.event.DocumentListener;
 import java.awt.*;
 import java.util.*;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 import java.awt.event.KeyAdapter;
@@ -680,6 +681,54 @@ public class CombatSimulator extends JFrame {
                 modifiersPanel.add(checkBox);
                 modifierCheckboxes.add(checkBox);
             }
+            
+            // Special Winnu flagship ability with additional dice spinner
+            if (selectedFaction.equals("The Winnu")) {
+                // Use a horizontal panel instead of vertical
+                JPanel winnuPanel = new JPanel(new BorderLayout(5, 0));
+                winnuPanel.setOpaque(false);
+                
+                JCheckBox flagshipCheckBox = new JCheckBox("<html>Salai Sai Corian's Ability<br>(roll additional dice)</html>");
+                flagshipCheckBox.setForeground(Color.WHITE);
+                flagshipCheckBox.setFont(new Font("Monospaced", Font.PLAIN, 13));
+                flagshipCheckBox.setOpaque(false);
+                
+                // Create a panel for the spinner
+                JPanel spinnerPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 5, 0));
+                spinnerPanel.setLayout(new BoxLayout(spinnerPanel, BoxLayout.Y_AXIS));
+                spinnerPanel.setOpaque(false);
+
+                // Add vertical glue before spinner
+                spinnerPanel.add(Box.createVerticalGlue());
+
+                // Create the spinner in its own panel
+                JPanel spinnerControlPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 5, 0));
+                spinnerControlPanel.setOpaque(false);
+                
+                SpinnerNumberModel model = new SpinnerNumberModel(1, 1, 5, 1);
+                JSpinner diceSpinner = new JSpinner(model);
+                diceSpinner.setPreferredSize(new Dimension(60, 25));
+                diceSpinner.setMaximumSize(new Dimension(80, 50000));
+                diceSpinner.setFont(new Font("Monospaced", Font.PLAIN, 13));
+                
+                spinnerPanel.add(diceSpinner);
+                
+                // Add checkbox to LEFT and spinner panel to RIGHT
+                winnuPanel.add(flagshipCheckBox, BorderLayout.WEST);
+                winnuPanel.add(spinnerPanel, BorderLayout.CENTER);
+                
+                modifiersPanel.add(winnuPanel);
+                modifierCheckboxes.add(flagshipCheckBox);
+                
+                // Store the spinner for later access
+                shipQuantities.put("WinnuFlagshipExtraDice", diceSpinner);
+                
+                // Enable/disable the spinner based on checkbox selection
+                flagshipCheckBox.addActionListener(e -> {
+                    diceSpinner.setEnabled(flagshipCheckBox.isSelected());
+                });
+                diceSpinner.setEnabled(false);
+            }
         }
         
         modifiersPanel.revalidate();
@@ -822,6 +871,23 @@ public class CombatSimulator extends JFrame {
             }
         }
         
+        // Check for Winnu flagship special ability
+        AtomicBoolean hasWinnuFlagshipAbility = new AtomicBoolean(false);
+        AtomicInteger extraWinnuDice = new AtomicInteger(0);
+        
+        if (selectedFaction.equals("The Winnu")) {
+            for (JCheckBox checkBox : modifierCheckboxes) {
+                if (checkBox.isSelected() && checkBox.getText().contains("Salai Sai Corian's Ability")) {
+                    hasWinnuFlagshipAbility.set(true);
+                    JSpinner extraDiceSpinner = shipQuantities.get("WinnuFlagshipExtraDice");
+                    if (extraDiceSpinner != null) {
+                        extraWinnuDice.set((Integer) extraDiceSpinner.getValue());
+                    }
+                    break;
+                }
+            }
+        }
+
         // Combine all modifiers
         List<RollModifier> allModifiers = new ArrayList<>();
         allModifiers.addAll(userModifiers);
@@ -863,6 +929,23 @@ public class CombatSimulator extends JFrame {
             boolean anyModified = false;
             
             for (Ship ship : ships) {
+                // Handle Winnu flagship extra dice
+                if (hasWinnuFlagshipAbility.get() && 
+                    ship instanceof Flagship && 
+                    ((Flagship)ship).isWinnu()) {
+                    
+                    // Roll extra dice for Winnu flagship
+                    for (int i = 0; i < extraWinnuDice.get(); i++) {
+                        CombatResult result = ship.rollDice(allModifiers, fleet);
+                        totalHits += result.getHits();
+                        allPreModifierRolls.addAll(result.getPreModifierRolls());
+                        allPostModifierRolls.addAll(result.getPostModifierRolls());
+                        if (result.wasModified()) {
+                            anyModified = true;
+                        }
+                    }
+                }
+                
                 CombatResult result = ship.rollDice(allModifiers, fleet);
                 totalHits += result.getHits();
                 allPreModifierRolls.addAll(result.getPreModifierRolls());
@@ -914,6 +997,13 @@ public class CombatSimulator extends JFrame {
         
         // Reset Jol-Nar flagship flag
         hasJolNarFlagship = false;
+
+        // Reset extra dice spinner if present
+        JSpinner extraDiceSpinner = shipQuantities.get("WinnuFlagshipExtraDice");
+        if (extraDiceSpinner != null) {
+            extraDiceSpinner.setValue(1);
+            extraDiceSpinner.setEnabled(false);
+        }
     }
     
     private String convertFlagshipNameToCode(String flagshipName) {
@@ -955,6 +1045,7 @@ public class CombatSimulator extends JFrame {
         if (text.contains("Nekro Mech's Ability")) return RollModifier.PLUS_TWO_MECH;
         if (text.contains("Supercharge Technology")) return RollModifier.PLUS_ONE_ALL;
         if (text.contains("Commander Rickar Rickani")) return RollModifier.PLUS_TWO_ALL;
+        if (text.contains("Salai Sai Corian's Ability")) return null;
         return null;
     }
     
@@ -981,13 +1072,13 @@ public class CombatSimulator extends JFrame {
             case "hil_colish" -> new Flagship(1, 5);
             case "arc_secundus", "son_of_ragh", "inferno", "dynamo", "genesis", "001", 
                  "arvicon_rex", "memoria2", "terror_between", "ysia_yssrila" -> new Flagship(2, 5);
-            case "salai_sai_corian" -> new Flagship(1, 7);
             case "duha_menaimon", "quetzecoatl", "artemiris", "wrath_of_kenara", 
                  "fourth_moon", "memoria", "ouranos", "loncarra_ssodu" -> new Flagship(2, 7);
             case "matriarch", "alastor", "van_hauge" -> new Flagship(2, 9);
             case "cmorran_norr" -> new Flagship(2, 6, "C'Morran N'orr");
             case "jns_hylarim" -> new Flagship(2, 6, "J.N.S. Hylarim");
             case "visz_el_vir" -> new Flagship(2, 9, "Visz el Vir");
+            case "salai_sai_corian" -> new Flagship(1, 7, "Salai Sai Corian");
             default -> throw new IllegalArgumentException("Unknown ship type: " + type);
         };
     }
