@@ -129,7 +129,7 @@ public class CombatSimulator extends JFrame {
     }
     
     // Flag to track if Jol-Nar flagship is present (negates faction penalty)
-    private boolean hasJolNarFlagship = false;
+    // private boolean hasJolNarFlagship = false;  // This line is deleted
     
     private static final Map<String, String[]> FACTION_FLAGSHIPS = new HashMap<>();
     static {
@@ -317,7 +317,6 @@ public class CombatSimulator extends JFrame {
             if (e.getActionCommand().equals("comboBoxEdited") || e.getModifiers() != 0) {
                 updateShipSelectionForFaction();
                 updateModifiersForFaction();
-                checkForJolNarFlagship();
             }
         });
         factionPanel.add(factionComboBox);
@@ -329,7 +328,6 @@ public class CombatSimulator extends JFrame {
                 // When mouse clicked, confirm the selection and update UI
                 updateShipSelectionForFaction();
                 updateModifiersForFaction();
-                checkForJolNarFlagship();
             }
         });
         
@@ -399,7 +397,6 @@ public class CombatSimulator extends JFrame {
                             // Update UI based on selection
                             updateShipSelectionForFaction();
                             updateModifiersForFaction();
-                            checkForJolNarFlagship();
                             
                             // Close dropdown and shift focus
                             factionComboBox.setPopupVisible(false);
@@ -621,8 +618,6 @@ public class CombatSimulator extends JFrame {
             quantitySpinner.setFont(new Font("Monospaced", Font.PLAIN, 13));
             quantitySpinner.setMaximumSize(new Dimension(80, 30));
             quantitySpinner.setAlignmentX(Component.CENTER_ALIGNMENT);
-            // Add a change listener to check for Jol-Nar flagship
-            quantitySpinner.addChangeListener(e -> checkForJolNarFlagship());
             
             flagshipPanel.add(flagshipLabel);
             flagshipPanel.add(Box.createVerticalStrut(5));
@@ -636,18 +631,6 @@ public class CombatSimulator extends JFrame {
         
         shipSelectionPanel.revalidate();
         shipSelectionPanel.repaint();
-    }
-    
-    private void checkForJolNarFlagship() {
-        String selectedFaction = (String) factionComboBox.getSelectedItem();
-        if (!"The Universities of Jol-Nar".equals(selectedFaction)) {
-            hasJolNarFlagship = false;
-            return;
-        }
-        
-        // Check if Jol-Nar flagship is present
-        JSpinner flagshipSpinner = shipQuantities.get("Flagship:J.N.S. Hylarim");
-        hasJolNarFlagship = flagshipSpinner != null && (Integer)flagshipSpinner.getValue() > 0;
     }
     
     private void updateModifiersForFaction() {
@@ -863,12 +846,7 @@ public class CombatSimulator extends JFrame {
         if (FACTION_ABILITIES.containsKey(selectedFaction)) {
             List<RollModifier> abilities = FACTION_ABILITIES.get(selectedFaction);
             
-            // For Jol-Nar, check if flagship cancels the -1 penalty
-            if (selectedFaction.equals("The Universities of Jol-Nar") && hasJolNarFlagship) {
-                // Skip adding the penalty
-            } else {
-                factionModifiers.addAll(abilities);
-            }
+            factionModifiers.addAll(abilities);
         }
         
         // Check for Winnu flagship special ability
@@ -900,11 +878,7 @@ public class CombatSimulator extends JFrame {
         if (selectedFaction.equals("The Sardakk N'orr")) {
             resultsArea.append("Sardakk N'orr Faction Ability: +1 to all combat rolls\n");
         } else if (selectedFaction.equals("The Universities of Jol-Nar")) {
-            if (hasJolNarFlagship) {
-                resultsArea.append("J.N.S. Hylarim negates Jol-Nar's -1 combat penalty\n");
-            } else {
-                resultsArea.append("Universities of Jol-Nar Faction Penalty: -1 to all combat rolls\n");
-            }
+            resultsArea.append("Universities of Jol-Nar Faction Penalty: -1 to all combat rolls\n");
         }
         
         // Print applied user modifiers
@@ -994,16 +968,6 @@ public class CombatSimulator extends JFrame {
         
         // Clear results
         resultsArea.setText("");
-        
-        // Reset Jol-Nar flagship flag
-        hasJolNarFlagship = false;
-
-        // Reset extra dice spinner if present
-        JSpinner extraDiceSpinner = shipQuantities.get("WinnuFlagshipExtraDice");
-        if (extraDiceSpinner != null) {
-            extraDiceSpinner.setValue(1);
-            extraDiceSpinner.setEnabled(false);
-        }
     }
     
     private String convertFlagshipNameToCode(String flagshipName) {
