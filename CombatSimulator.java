@@ -888,8 +888,13 @@ public class CombatSimulator extends JFrame {
                     .map(RollModifier::getFlag)
                     .collect(Collectors.joining(", ")) + "\n");
         }
+
+        // Execute Mentak Coalition Ambush ability if applicable
+        if (selectedFaction.equals("The Mentak Coalition")) {
+            performMentakAmbush(fleet);
+        }
         
-        resultsArea.append("Rolling for combat...\n");
+        resultsArea.append("== ROLLING FOR COMBAT ==\n");
         
         Map<String, List<Ship>> groupedShips = fleet.stream()
             .collect(Collectors.groupingBy(Ship::getShipType));
@@ -1045,6 +1050,138 @@ public class CombatSimulator extends JFrame {
             case "salai_sai_corian" -> new Flagship(1, 7, "Salai Sai Corian");
             default -> throw new IllegalArgumentException("Unknown ship type: " + type);
         };
+    }
+
+    private int performMentakAmbush(List<Ship> fleet) {
+        List<Ship> eligibleShips = fleet.stream()
+            .filter(ship -> ship instanceof Cruiser || ship instanceof Destroyer)
+            .collect(Collectors.toList());
+            
+        // Only perform ambush if there are eligible ships
+        if (eligibleShips.isEmpty()) {
+            return 0;
+        }
+    
+        // Ask user if they want to use ambush
+        int response = JOptionPane.showConfirmDialog(
+            this,
+            "Do you want to use the Ambush ability?",
+            "Ambush Ability",
+            JOptionPane.YES_NO_OPTION
+        );
+        
+        if (response == JOptionPane.NO_OPTION) {
+            resultsArea.append("Ambush ability not used.\n\n");
+            return 0;
+        }
+        
+        // Ship selection for ambush
+        List<Ship> selectedShips = new ArrayList<>();
+        
+        // If there are multiple eligible ships, let the user choose
+        if (eligibleShips.size() > 1) {
+            // Create ship selection dialog
+            JDialog selectionDialog = new JDialog((Frame)SwingUtilities.getWindowAncestor(this), "Select Ships for Ambush", true);
+            selectionDialog.setLayout(new BorderLayout());
+
+            selectionDialog.setMinimumSize(new Dimension(225, 100));
+            
+            JPanel shipPanel = new JPanel();
+            shipPanel.setLayout(new BoxLayout(shipPanel, BoxLayout.Y_AXIS));
+            
+            JLabel instructionLabel = new JLabel("Select ships for Ambush (up to 2):");
+            shipPanel.add(instructionLabel);
+            
+            Map<JCheckBox, Ship> checkBoxMap = new HashMap<>();
+            
+            // Add a checkbox for each eligible ship
+            for (Ship ship : eligibleShips) {
+                JCheckBox shipCheckBox = new JCheckBox(ship.getShipType() + " (Combat Value: " + ship.getCombatValue() + ")");
+                checkBoxMap.put(shipCheckBox, ship);
+                shipPanel.add(shipCheckBox);
+
+                // Add key listener to respond to Enter key
+                shipCheckBox.addKeyListener(new KeyAdapter() {
+                    @Override
+                    public void keyPressed(KeyEvent e) {
+                        if (e.getKeyCode() == KeyEvent.VK_ENTER) {
+                            shipCheckBox.setSelected(!shipCheckBox.isSelected());
+                        }
+                    }
+                });
+            }
+            
+            JPanel buttonPanel = new JPanel();
+            JButton confirmButton = new JButton("Confirm Selection");
+            
+            confirmButton.addActionListener(e -> {
+                List<Ship> tempSelected = new ArrayList<>();
+                
+                // Get all selected ships
+                for (Map.Entry<JCheckBox, Ship> entry : checkBoxMap.entrySet()) {
+                    if (entry.getKey().isSelected()) {
+                        tempSelected.add(entry.getValue());
+                    }
+                }
+                
+                // If more than 2 ships were selected, take the best 2 based on combat value
+                if (tempSelected.size() > 2) {
+                    // Inform the user that more than 2 ships were selected
+                    resultsArea.append("More than 2 ships were selected. The 2 ships with the best combat values were automatically chosen.\n\n");
+
+                    // Sort by combat value (lower is better in Twilight Imperium)
+                    tempSelected.sort(Comparator.comparing(Ship::getCombatValue));
+                    
+                    // Take the 2 ships with the lowest combat values (best chance to hit)
+                    selectedShips.add(tempSelected.get(0));
+                    selectedShips.add(tempSelected.get(1));
+                } else {
+                    // If 2 or fewer ships were selected, use all of them
+                    selectedShips.addAll(tempSelected);
+                }
+                
+                selectionDialog.dispose();
+            });
+            
+            buttonPanel.add(confirmButton);
+            
+            selectionDialog.add(shipPanel, BorderLayout.CENTER);
+            selectionDialog.add(buttonPanel, BorderLayout.SOUTH);
+            
+            selectionDialog.pack();
+            selectionDialog.setLocationRelativeTo(this);
+            selectionDialog.setVisible(true);
+        } else {
+            // If only one eligible ship, use it
+            selectedShips.addAll(eligibleShips);
+        }
+        
+        // If no ships were selected, return
+        if (selectedShips.isEmpty()) {
+            resultsArea.append("No ships were selected for Ambush.\n\n");
+            return 0;
+        }
+        
+        resultsArea.append("== MENTAK COALITION AMBUSH ==\n");
+        
+        int ambushHits = 0;
+        
+        for (Ship ship : selectedShips) {
+            int roll = (int)(Math.random() * 10) + 1;
+            int combatValue = ship.getCombatValue();
+            
+            resultsArea.append(String.format("%s rolled %d %s\n", 
+                ship.getShipType(), 
+                roll, 
+                roll >= combatValue ? "with 1 hit" : "with 0 hits"));
+                
+            if (roll >= combatValue) {
+                ambushHits++;
+            }
+        }
+        
+        resultsArea.append(String.format("Ambush total hits: %d\n\n", ambushHits));
+        return ambushHits;
     }
     
     public static void main(String[] args) {
