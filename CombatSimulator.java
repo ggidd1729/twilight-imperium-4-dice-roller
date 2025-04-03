@@ -1213,75 +1213,83 @@ public class CombatSimulator extends JFrame {
             return 0;
         }
         
-        // Ship selection for AFB
-        List<Ship> selectedShips = new ArrayList<>();
+        // Select number of destroyers for AFB
+        int numDestroyers = eligibleShips.size();
+        int selectedCount = numDestroyers;
         
-        // If there are multiple eligible ships, let the user choose
-        if (eligibleShips.size() > 1) {
-            // Create ship selection dialog
-            JDialog selectionDialog = new JDialog((Frame)SwingUtilities.getWindowAncestor(this), "Select Destroyers for AFB", true);
-            selectionDialog.setLayout(new BorderLayout());
-            selectionDialog.setMinimumSize(new Dimension(225, 100));
+        // If more than 1 destroyer, ask how many to use
+        if (numDestroyers > 1) {
+            // Create a map to count destroyer types
+            Map<String, Integer> destroyerTypeCounts = new HashMap<>();
             
-            JPanel shipPanel = new JPanel();
-            shipPanel.setLayout(new BoxLayout(shipPanel, BoxLayout.Y_AXIS));
-            
-            JLabel instructionLabel = new JLabel("Select destroyers to use Anti-Fighter Barrage:");
-            shipPanel.add(instructionLabel);
-            
-            Map<JCheckBox, Ship> checkBoxMap = new HashMap<>();
-            
-            // Add a checkbox for each eligible ship
+            // Count how many of each destroyer type
             for (Ship ship : eligibleShips) {
-                int shipCombatValue = ship.getCombatValue();
-                String afbDetails = "";
+                String type = "";
+                int combatValue = ship.getCombatValue();
+                String selectedFaction = (String) factionComboBox.getSelectedItem();
+                boolean isArgent = "The Argent Flight".equals(selectedFaction);
                 
-                if (shipCombatValue == 9) {
-                    afbDetails = " (Destroyer I - AFB: 9, 2 dice)";
-                } else if (shipCombatValue == 8) {
-                    afbDetails = " (Destroyer II - AFB: 6, 3 dice)";
-                } else if (shipCombatValue == 7) {
-                    afbDetails = " (Strike Wing Alpha II - AFB: 6, 3 dice)";
+                if (combatValue == 9) {
+                    type = "Destroyer I (AFB: 9, 2 dice)";
+                } else if (combatValue == 8) {
+                    if (isArgent) {
+                        type = "Strike Wing Alpha I (AFB: 9, 2 dice)";
+                    } else {
+                        type = "Destroyer II (AFB: 6, 3 dice)";
+                    }
+                } else if (combatValue == 7) {
+                    type = "Strike Wing Alpha II (AFB: 6, 3 dice)";
+                } else {
+                    type = "Unknown Destroyer";
                 }
                 
-                JCheckBox shipCheckBox = new JCheckBox(ship.getShipType() + afbDetails);
-                checkBoxMap.put(shipCheckBox, ship);
-                shipPanel.add(shipCheckBox);
-
-                // Add key listener to respond to Enter key
-                shipCheckBox.addKeyListener(new KeyAdapter() {
-                    @Override
-                    public void keyPressed(KeyEvent e) {
-                        if (e.getKeyCode() == KeyEvent.VK_ENTER) {
-                            shipCheckBox.setSelected(!shipCheckBox.isSelected());
-                        }
-                    }
-                });
+                destroyerTypeCounts.put(type, destroyerTypeCounts.getOrDefault(type, 0) + 1);
             }
             
-            JPanel buttonPanel = new JPanel();
-            JButton confirmButton = new JButton("Confirm Selection");
+            // Create info panel showing destroyer types available
+            JPanel infoPanel = new JPanel();
+            infoPanel.setLayout(new BoxLayout(infoPanel, BoxLayout.Y_AXIS));
+            infoPanel.add(new JLabel("Available destroyers:"));
             
-            confirmButton.addActionListener(e -> {
-                for (Map.Entry<JCheckBox, Ship> entry : checkBoxMap.entrySet()) {
-                    if (entry.getKey().isSelected()) {
-                        selectedShips.add(entry.getValue());
-                    }
-                }
-                selectionDialog.dispose();
-            });
+            for (Map.Entry<String, Integer> entry : destroyerTypeCounts.entrySet()) {
+                infoPanel.add(new JLabel(entry.getValue() + "x " + entry.getKey()));
+            }
             
-            buttonPanel.add(confirmButton);
+            JPanel mainPanel = new JPanel();
+            mainPanel.setLayout(new BoxLayout(mainPanel, BoxLayout.Y_AXIS));
+            mainPanel.add(infoPanel);
             
-            selectionDialog.add(shipPanel, BorderLayout.CENTER);
-            selectionDialog.add(buttonPanel, BorderLayout.SOUTH);
+            JPanel spinnerPanel = new JPanel(new FlowLayout());
+            spinnerPanel.add(new JLabel("Number of destroyers to use for Anti-Fighter Barrage: "));
             
-            selectionDialog.pack();
-            selectionDialog.setLocationRelativeTo(this);
-            selectionDialog.setVisible(true);
-        } else {
-            // If only one eligible ship, use it
-            selectedShips.addAll(eligibleShips);
+            SpinnerNumberModel spinnerModel = new SpinnerNumberModel(numDestroyers, 1, numDestroyers, 1);
+            JSpinner spinner = new JSpinner(spinnerModel);
+            spinnerPanel.add(spinner);
+            
+            mainPanel.add(spinnerPanel);
+            
+            int option = JOptionPane.showConfirmDialog(
+                this, 
+                mainPanel, 
+                "Select Number of Destroyers", 
+                JOptionPane.OK_CANCEL_OPTION, 
+                JOptionPane.QUESTION_MESSAGE
+            );
+            
+            if (option == JOptionPane.OK_OPTION) {
+                selectedCount = (Integer) spinner.getValue();
+            } else {
+                resultsArea.append("Anti-Fighter Barrage cancelled.\n\n");
+                return 0;
+            }
+        }
+        
+        // Take the specified number of destroyers
+        List<Ship> selectedShips = new ArrayList<>();
+        if (selectedCount > 0) {
+            for (int i = 0; i < selectedCount && i < eligibleShips.size(); i++) {
+                selectedShips.add(eligibleShips.get(i));
+            }
         }
         
         // If no ships were selected, return
@@ -1295,29 +1303,8 @@ public class CombatSimulator extends JFrame {
         int afbHits = 0;
         
         for (Ship ship : selectedShips) {
-            int combatValue;
-            int numDice;
-            
-            int shipCombatValue = ship.getCombatValue();
-            
-            // Base the AFB values on the combat value of the ship
-            if (shipCombatValue == 9) {
-                // Destroyer I
-                combatValue = 9;
-                numDice = 2;
-            } else if (shipCombatValue == 8) {
-                // Destroyer II or Strike Wing Alpha I
-                combatValue = 6;
-                numDice = 3;
-            } else if (shipCombatValue == 7) {
-                // Strike Wing Alpha II
-                combatValue = 6;
-                numDice = 3;
-            } else {
-                // Default case (shouldn't happen)
-                combatValue = 9;
-                numDice = 2;
-            }
+            int combatValue = getAFBCombatValue(ship);
+            int numDice = getAFBDiceCount(ship);
             
             List<Integer> rolls = new ArrayList<>();
             int shipHits = 0;
@@ -1338,6 +1325,62 @@ public class CombatSimulator extends JFrame {
         
         resultsArea.append(String.format("Anti-Fighter Barrage total hits: %d\n\n", afbHits));
         return afbHits;
+    }
+    
+    // Helper method to determine AFB combat value of a destroyer
+    private int getAFBCombatValue(Ship ship) {
+        int shipCombatValue = ship.getCombatValue();
+        String selectedFaction = (String) factionComboBox.getSelectedItem();
+        boolean isArgent = "The Argent Flight".equals(selectedFaction);
+        
+        // Base the AFB values on the combat value of the ship and faction
+        if (shipCombatValue == 9) {
+            // Destroyer I
+            return 9;
+        } else if (shipCombatValue == 8) {
+            // Destroyer II or Strike Wing Alpha I
+            if (isArgent) {
+                // Strike Wing Alpha I for Argent Flight
+                return 9;
+            } else {
+                // Regular Destroyer II
+                return 6;
+            }
+        } else if (shipCombatValue == 7) {
+            // Strike Wing Alpha II
+            return 6;
+        } else {
+            // Default case
+            return 9;
+        }
+    }
+    
+    // Helper method to determine AFB dice count of a destroyer
+    private int getAFBDiceCount(Ship ship) {
+        int shipCombatValue = ship.getCombatValue();
+        String selectedFaction = (String) factionComboBox.getSelectedItem();
+        boolean isArgent = "The Argent Flight".equals(selectedFaction);
+        
+        // Base the AFB dice count on the combat value of the ship and faction
+        if (shipCombatValue == 9) {
+            // Destroyer I
+            return 2;
+        } else if (shipCombatValue == 8) {
+            // Destroyer II or Strike Wing Alpha I
+            if (isArgent) {
+                // Strike Wing Alpha I for Argent Flight
+                return 2;
+            } else {
+                // Regular Destroyer II
+                return 3;
+            }
+        } else if (shipCombatValue == 7) {
+            // Strike Wing Alpha II
+            return 3;
+        } else {
+            // Default case
+            return 2;
+        }
     }
     
     public static void main(String[] args) {
