@@ -894,6 +894,12 @@ public class CombatSimulator extends JFrame {
             performMentakAmbush(fleet);
         }
         
+        // Check for destroyers and offer Anti-Fighter Barrage
+        boolean hasDestroyers = fleet.stream().anyMatch(ship -> ship instanceof Destroyer);
+        if (hasDestroyers) {
+            performAntiFighterBarrage(fleet);
+        }
+        
         resultsArea.append("== ROLLING FOR COMBAT ==\n");
         
         Map<String, List<Ship>> groupedShips = fleet.stream()
@@ -1182,6 +1188,156 @@ public class CombatSimulator extends JFrame {
         
         resultsArea.append(String.format("Ambush total hits: %d\n\n", ambushHits));
         return ambushHits;
+    }
+    
+    private int performAntiFighterBarrage(List<Ship> fleet) {
+        List<Ship> eligibleShips = fleet.stream()
+            .filter(ship -> ship instanceof Destroyer)
+            .collect(Collectors.toList());
+            
+        // Only perform AFB if there are eligible ships
+        if (eligibleShips.isEmpty()) {
+            return 0;
+        }
+    
+        // Ask user if they want to use Anti-Fighter Barrage
+        int response = JOptionPane.showConfirmDialog(
+            this,
+            "Do you want to use Anti-Fighter Barrage?",
+            "Anti-Fighter Barrage",
+            JOptionPane.YES_NO_OPTION
+        );
+        
+        if (response == JOptionPane.NO_OPTION) {
+            resultsArea.append("Anti-Fighter Barrage not used.\n\n");
+            return 0;
+        }
+        
+        // Ship selection for AFB
+        List<Ship> selectedShips = new ArrayList<>();
+        
+        // If there are multiple eligible ships, let the user choose
+        if (eligibleShips.size() > 1) {
+            // Create ship selection dialog
+            JDialog selectionDialog = new JDialog((Frame)SwingUtilities.getWindowAncestor(this), "Select Destroyers for AFB", true);
+            selectionDialog.setLayout(new BorderLayout());
+            selectionDialog.setMinimumSize(new Dimension(225, 100));
+            
+            JPanel shipPanel = new JPanel();
+            shipPanel.setLayout(new BoxLayout(shipPanel, BoxLayout.Y_AXIS));
+            
+            JLabel instructionLabel = new JLabel("Select destroyers to use Anti-Fighter Barrage:");
+            shipPanel.add(instructionLabel);
+            
+            Map<JCheckBox, Ship> checkBoxMap = new HashMap<>();
+            
+            // Add a checkbox for each eligible ship
+            for (Ship ship : eligibleShips) {
+                int shipCombatValue = ship.getCombatValue();
+                String afbDetails = "";
+                
+                if (shipCombatValue == 9) {
+                    afbDetails = " (Destroyer I - AFB: 9, 2 dice)";
+                } else if (shipCombatValue == 8) {
+                    afbDetails = " (Destroyer II - AFB: 6, 3 dice)";
+                } else if (shipCombatValue == 7) {
+                    afbDetails = " (Strike Wing Alpha II - AFB: 6, 3 dice)";
+                }
+                
+                JCheckBox shipCheckBox = new JCheckBox(ship.getShipType() + afbDetails);
+                checkBoxMap.put(shipCheckBox, ship);
+                shipPanel.add(shipCheckBox);
+
+                // Add key listener to respond to Enter key
+                shipCheckBox.addKeyListener(new KeyAdapter() {
+                    @Override
+                    public void keyPressed(KeyEvent e) {
+                        if (e.getKeyCode() == KeyEvent.VK_ENTER) {
+                            shipCheckBox.setSelected(!shipCheckBox.isSelected());
+                        }
+                    }
+                });
+            }
+            
+            JPanel buttonPanel = new JPanel();
+            JButton confirmButton = new JButton("Confirm Selection");
+            
+            confirmButton.addActionListener(e -> {
+                for (Map.Entry<JCheckBox, Ship> entry : checkBoxMap.entrySet()) {
+                    if (entry.getKey().isSelected()) {
+                        selectedShips.add(entry.getValue());
+                    }
+                }
+                selectionDialog.dispose();
+            });
+            
+            buttonPanel.add(confirmButton);
+            
+            selectionDialog.add(shipPanel, BorderLayout.CENTER);
+            selectionDialog.add(buttonPanel, BorderLayout.SOUTH);
+            
+            selectionDialog.pack();
+            selectionDialog.setLocationRelativeTo(this);
+            selectionDialog.setVisible(true);
+        } else {
+            // If only one eligible ship, use it
+            selectedShips.addAll(eligibleShips);
+        }
+        
+        // If no ships were selected, return
+        if (selectedShips.isEmpty()) {
+            resultsArea.append("No destroyers were selected for Anti-Fighter Barrage.\n\n");
+            return 0;
+        }
+        
+        resultsArea.append("== ANTI-FIGHTER BARRAGE ==\n");
+        
+        int afbHits = 0;
+        
+        for (Ship ship : selectedShips) {
+            int combatValue;
+            int numDice;
+            
+            int shipCombatValue = ship.getCombatValue();
+            
+            // Base the AFB values on the combat value of the ship
+            if (shipCombatValue == 9) {
+                // Destroyer I
+                combatValue = 9;
+                numDice = 2;
+            } else if (shipCombatValue == 8) {
+                // Destroyer II or Strike Wing Alpha I
+                combatValue = 6;
+                numDice = 3;
+            } else if (shipCombatValue == 7) {
+                // Strike Wing Alpha II
+                combatValue = 6;
+                numDice = 3;
+            } else {
+                // Default case (shouldn't happen)
+                combatValue = 9;
+                numDice = 2;
+            }
+            
+            List<Integer> rolls = new ArrayList<>();
+            int shipHits = 0;
+            
+            for (int i = 0; i < numDice; i++) {
+                int roll = (int)(Math.random() * 10) + 1;
+                rolls.add(roll);
+                if (roll >= combatValue) {
+                    shipHits++;
+                }
+            }
+            
+            resultsArea.append(String.format("%s rolled %s with %d hits\n", 
+                ship.getShipType(), rolls, shipHits));
+                
+            afbHits += shipHits;
+        }
+        
+        resultsArea.append(String.format("Anti-Fighter Barrage total hits: %d\n\n", afbHits));
+        return afbHits;
     }
     
     public static void main(String[] args) {
