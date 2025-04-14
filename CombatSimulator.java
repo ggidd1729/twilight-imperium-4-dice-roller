@@ -1301,6 +1301,7 @@ public class CombatSimulator extends JFrame {
         resultsArea.append("== ANTI-FIGHTER BARRAGE ==\n");
         
         int afbHits = 0;
+        int infantryKills = 0;  // Track infantry kills from Strike Wing Alpha II
         
         for (Ship ship : selectedShips) {
             int combatValue = getAFBCombatValue(ship);
@@ -1315,6 +1316,11 @@ public class CombatSimulator extends JFrame {
                 if (roll >= combatValue) {
                     shipHits++;
                 }
+                
+                // Check for Strike Wing Alpha II special ability
+                if ((ship.getCombatValue() == 7) && (roll == 9 || roll == 10)) {
+                    infantryKills++;
+                }
             }
             
             resultsArea.append(String.format("%s rolled %s with %d hits\n", 
@@ -1323,7 +1329,14 @@ public class CombatSimulator extends JFrame {
             afbHits += shipHits;
         }
         
-        resultsArea.append(String.format("Anti-Fighter Barrage total hits: %d\n\n", afbHits));
+        resultsArea.append(String.format("Anti-Fighter Barrage total hits: %d\n", afbHits));
+        
+        // Add infantry kills summary if applicable
+        if (infantryKills > 0) {
+            resultsArea.append(String.format("Infantry destroyed in the space area (Strike Wing Alpha II's ability): %d\n", infantryKills));
+        }
+        
+        resultsArea.append("\n");
         return afbHits;
     }
     
