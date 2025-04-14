@@ -1051,12 +1051,28 @@ public class CombatSimulator extends JFrame {
             case "m" -> new Mech();
             case "ws" -> new WarSun();
             case "z_grav_eidolon" -> new Mech(2, 8);
-            case "hil_colish" -> new Flagship(1, 5);
-            case "arc_secundus", "son_of_ragh", "inferno", "dynamo", "genesis", "001", 
-                 "arvicon_rex", "memoria2", "terror_between", "ysia_yssrila" -> new Flagship(2, 5);
-            case "duha_menaimon", "quetzecoatl", "artemiris", "wrath_of_kenara", 
-                 "fourth_moon", "memoria", "ouranos", "loncarra_ssodu" -> new Flagship(2, 7);
-            case "matriarch", "alastor", "van_hauge" -> new Flagship(2, 9);
+            case "hil_colish" -> new Flagship(1, 5, "Hil Colish");
+            case "arc_secundus" -> new Flagship(2, 5, "Arc Secundus");
+            case "son_of_ragh" -> new Flagship(2, 5, "Son of Ragh");
+            case "inferno" -> new Flagship(2, 5, "Inferno");
+            case "dynamo" -> new Flagship(2, 5, "Dynamo");
+            case "genesis" -> new Flagship(2, 5, "Genesis");
+            case "001" -> new Flagship(2, 5, "0.0.1");
+            case "arvicon_rex" -> new Flagship(2, 5, "Arvicon Rex");
+            case "memoria2" -> new Flagship(2, 5, "Memoria II");
+            case "terror_between" -> new Flagship(2, 5, "Terror Between");
+            case "ysia_yssrila" -> new Flagship(2, 5, "Y'sia Y'ssrila");
+            case "duha_menaimon" -> new Flagship(2, 7, "Duha Menaimon");
+            case "quetzecoatl" -> new Flagship(2, 7, "Quetzcoatl");
+            case "artemiris" -> new Flagship(2, 7, "Artemiris");
+            case "wrath_of_kenara" -> new Flagship(2, 7, "Wrath of Kenara");
+            case "fourth_moon" -> new Flagship(2, 7, "Fourth Moon");
+            case "memoria" -> new Flagship(2, 7, "Memoria");
+            case "ouranos" -> new Flagship(2, 7, "Ouranos");
+            case "loncarra_ssodu" -> new Flagship(2, 7, "Loncarra Ssodu");
+            case "matriarch" -> new Flagship(2, 9, "Matriarch");
+            case "alastor" -> new Flagship(2, 9, "Alastor");
+            case "van_hauge" -> new Flagship(2, 9, "Van Hauge");
             case "cmorran_norr" -> new Flagship(2, 6, "C'Morran N'orr");
             case "jns_hylarim" -> new Flagship(2, 6, "J.N.S. Hylarim");
             case "visz_el_vir" -> new Flagship(2, 9, "Visz el Vir");
