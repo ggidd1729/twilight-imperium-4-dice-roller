@@ -902,7 +902,12 @@ public class CombatSimulator extends JFrame {
         
         // Check for destroyers and offer Anti-Fighter Barrage
         boolean hasDestroyers = fleet.stream().anyMatch(ship -> ship instanceof Destroyer);
-        if (hasDestroyers) {
+        // Check for flagships with AFB abilities
+        boolean hasFlagshipWithAFB = fleet.stream()
+            .anyMatch(ship -> ship instanceof Flagship && 
+                     (((Flagship)ship).isSaar() || ((Flagship)ship).isNomad()));
+                      
+        if (hasDestroyers || hasFlagshipWithAFB) {
             performAntiFighterBarrage(fleet);
         }
         
@@ -1214,8 +1219,11 @@ public class CombatSimulator extends JFrame {
     }
     
     private int performAntiFighterBarrage(List<Ship> fleet) {
+        // Find eligible ships (destroyers and flagships with AFB)
         List<Ship> eligibleShips = fleet.stream()
-            .filter(ship -> ship instanceof Destroyer)
+            .filter(ship -> ship instanceof Destroyer || 
+                    (ship instanceof Flagship && 
+                     (((Flagship)ship).isSaar() || ((Flagship)ship).isNomad())))
             .collect(Collectors.toList());
             
         // Only perform AFB if there are eligible ships
@@ -1341,7 +1349,7 @@ public class CombatSimulator extends JFrame {
                 }
                 
                 // Check for Strike Wing Alpha II special ability
-                if ((ship.getCombatValue() == 7) && (roll == 9 || roll == 10)) {
+                if ((ship instanceof Destroyer) && (ship.getCombatValue() == 7) && (roll == 9 || roll == 10)) {
                     infantryKills++;
                 }
             }
@@ -1361,62 +1369,84 @@ public class CombatSimulator extends JFrame {
         
         resultsArea.append("\n");
         return afbHits;
-    }
-    
-    // Helper method to determine AFB combat value of a destroyer
+    } 
+    // Helper method to determine AFB combat value
     private int getAFBCombatValue(Ship ship) {
-        int shipCombatValue = ship.getCombatValue();
-        String selectedFaction = (String) factionComboBox.getSelectedItem();
-        boolean isArgent = "The Argent Flight".equals(selectedFaction);
-        
-        // Base the AFB values on the combat value of the ship and faction
-        if (shipCombatValue == 9) {
-            // Destroyer I
-            return 9;
-        } else if (shipCombatValue == 8) {
-            // Destroyer II or Strike Wing Alpha I
-            if (isArgent) {
-                // Strike Wing Alpha I for Argent Flight
+        if (ship instanceof Destroyer) {
+            int shipCombatValue = ship.getCombatValue();
+            String selectedFaction = (String) factionComboBox.getSelectedItem();
+            boolean isArgent = "The Argent Flight".equals(selectedFaction);
+            
+            // Base the AFB values on the combat value of the ship and faction
+            if (shipCombatValue == 9) {
+                // Destroyer I
                 return 9;
-            } else {
-                // Regular Destroyer II
+            } else if (shipCombatValue == 8) {
+                // Destroyer II or Strike Wing Alpha I
+                if (isArgent) {
+                    // Strike Wing Alpha I for Argent Flight
+                    return 9;
+                } else {
+                    // Regular Destroyer II
+                    return 6;
+                }
+            } else if (shipCombatValue == 7) {
+                // Strike Wing Alpha II
                 return 6;
+            } else {
+                // Default case
+                return 9;
             }
-        } else if (shipCombatValue == 7) {
-            // Strike Wing Alpha II
-            return 6;
-        } else {
-            // Default case
-            return 9;
+        } else if (ship instanceof Flagship) {
+            Flagship flagship = (Flagship) ship;
+            if ("Son of Ragh".equals(flagship.getShipName())) {
+                return 6; // Son of Ragh has AFB 6
+            } else if ("Memoria".equals(flagship.getShipName())) {
+                return 8; // Memoria has AFB 8
+            } else if ("Memoria II".equals(flagship.getShipName())) {
+                return 5; // Memoria II has AFB 5
+            }
         }
+        // Default case
+        return 9;
     }
     
-    // Helper method to determine AFB dice count of a destroyer
+    // Helper method to determine AFB dice count
     private int getAFBDiceCount(Ship ship) {
-        int shipCombatValue = ship.getCombatValue();
-        String selectedFaction = (String) factionComboBox.getSelectedItem();
-        boolean isArgent = "The Argent Flight".equals(selectedFaction);
-        
-        // Base the AFB dice count on the combat value of the ship and faction
-        if (shipCombatValue == 9) {
-            // Destroyer I
-            return 2;
-        } else if (shipCombatValue == 8) {
-            // Destroyer II or Strike Wing Alpha I
-            if (isArgent) {
-                // Strike Wing Alpha I for Argent Flight
+        if (ship instanceof Destroyer) {
+            int shipCombatValue = ship.getCombatValue();
+            String selectedFaction = (String) factionComboBox.getSelectedItem();
+            boolean isArgent = "The Argent Flight".equals(selectedFaction);
+            
+            // Base the AFB dice count on the combat value of the ship and faction
+            if (shipCombatValue == 9) {
+                // Destroyer I
                 return 2;
-            } else {
-                // Regular Destroyer II
+            } else if (shipCombatValue == 8) {
+                // Destroyer II or Strike Wing Alpha I
+                if (isArgent) {
+                    // Strike Wing Alpha I for Argent Flight
+                    return 2;
+                } else {
+                    // Regular Destroyer II
+                    return 3;
+                }
+            } else if (shipCombatValue == 7) {
+                // Strike Wing Alpha II
                 return 3;
+            } else {
+                // Default case
+                return 2;
             }
-        } else if (shipCombatValue == 7) {
-            // Strike Wing Alpha II
-            return 3;
-        } else {
-            // Default case
-            return 2;
+        } else if (ship instanceof Flagship) {
+            if (((Flagship)ship).isSaar()) {
+                return 4; // Son of Ragh has 4 dice
+            } else if (((Flagship)ship).isNomad()) {
+                return 3; // Both Memoria and Memoria II have 3 dice
+            }
         }
+        // Default case
+        return 2;
     }
     
     public static void main(String[] args) {

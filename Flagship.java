@@ -4,6 +4,8 @@ public class Flagship extends AbstractShip {
     private final boolean isSardakk;
     private final boolean isNRA;
     private final boolean isWinnu;
+    private final boolean isSaar;
+    private final boolean isNomad;
 
     public Flagship () {
         super(1, 5, "Flagship");
@@ -12,6 +14,8 @@ public class Flagship extends AbstractShip {
         this.isSardakk = false;
         this.isNRA = false;
         this.isWinnu = false;
+        this.isSaar = false;
+        this.isNomad = false;
     }
 
     public Flagship (int numDice, int combatValue) {
@@ -21,6 +25,8 @@ public class Flagship extends AbstractShip {
         this.isSardakk = false;
         this.isNRA = false;
         this.isWinnu = false;
+        this.isSaar = false;
+        this.isNomad = false;
     }
 
     public Flagship (int numDice, int combatValue, String name){
@@ -30,6 +36,8 @@ public class Flagship extends AbstractShip {
         this.isSardakk = "C'Morran N'orr".equals(name);
         this.isNRA = "Visz el Vir".equals(name);
         this.isWinnu = "Salai Sai Corian".equals(name);
+        this.isSaar = "Son of Ragh".equals(name);
+        this.isNomad = "Memoria".equals(name) || "Memoria II".equals(name);
     }
 
     public boolean isJolNar() {
@@ -46,6 +54,14 @@ public class Flagship extends AbstractShip {
 
     public boolean isWinnu() {
         return isWinnu;
+    }
+    
+    public boolean isSaar() {
+        return isSaar;
+    }
+    
+    public boolean isNomad() {
+        return isNomad;
     }
 
     public String getShipName() {
