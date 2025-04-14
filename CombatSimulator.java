@@ -154,7 +154,7 @@ public class CombatSimulator extends JFrame {
         FACTION_FLAGSHIPS.put("The Empyrean", new String[]{"Dynamo"});
         FACTION_FLAGSHIPS.put("The Mahact Gene-Sorcerers", new String[]{"Arvicon Rex"});
         FACTION_FLAGSHIPS.put("The Naaz-Rokha Alliance", new String[]{"Visz el Vir"});
-        FACTION_FLAGSHIPS.put("The Nomad", new String[]{"Memoria"});
+        FACTION_FLAGSHIPS.put("The Nomad", new String[]{"Memoria", "Memoria II"});
         FACTION_FLAGSHIPS.put("The Titans of Ul", new String[]{"Ouranos"});
         FACTION_FLAGSHIPS.put("The Vuil'raith Cabal", new String[]{"Terror Between"});
     }
@@ -198,6 +198,10 @@ public class CombatSimulator extends JFrame {
         UNIT_NAME_TO_CODE.put("Strike Wing Alpha I", "d2");
         UNIT_NAME_TO_CODE.put("Strike Wing Alpha II", "d3");
         UNIT_NAME_TO_CODE.put("Z-Grav Eidolon", "z_grav_eidolon");
+        
+        // Flagships
+        UNIT_NAME_TO_CODE.put("Memoria", "memoria");
+        UNIT_NAME_TO_CODE.put("Memoria II", "memoria2");
     }
     
     // Custom combo box model to implement search functionality
@@ -604,29 +608,31 @@ public class CombatSimulator extends JFrame {
         // Add the faction's flagship
         String[] flagships = FACTION_FLAGSHIPS.get(selectedFaction);
         if (flagships != null && flagships.length > 0) {
-            JPanel flagshipPanel = new JPanel();
-            flagshipPanel.setLayout(new BoxLayout(flagshipPanel, BoxLayout.Y_AXIS));
-            flagshipPanel.setOpaque(false);
-            
-            JLabel flagshipLabel = new JLabel("Flagship: " + flagships[0]);
-            flagshipLabel.setForeground(Color.WHITE);
-            flagshipLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
-            flagshipLabel.setFont(new Font("Monospaced", Font.PLAIN, 13));
-            
-            SpinnerNumberModel model = new SpinnerNumberModel(0, 0, 1, 1);
-            JSpinner quantitySpinner = new JSpinner(model);
-            quantitySpinner.setFont(new Font("Monospaced", Font.PLAIN, 13));
-            quantitySpinner.setMaximumSize(new Dimension(80, 30));
-            quantitySpinner.setAlignmentX(Component.CENTER_ALIGNMENT);
-            
-            flagshipPanel.add(flagshipLabel);
-            flagshipPanel.add(Box.createVerticalStrut(5));
-            flagshipPanel.add(quantitySpinner);
-            
-            shipSelectionPanel.add(flagshipPanel);
-            
-            // Store the flagship spinner
-            shipQuantities.put("Flagship:" + flagships[0], quantitySpinner);
+            for (String flagship : flagships) {
+                JPanel flagshipPanel = new JPanel();
+                flagshipPanel.setLayout(new BoxLayout(flagshipPanel, BoxLayout.Y_AXIS));
+                flagshipPanel.setOpaque(false);
+                
+                JLabel flagshipLabel = new JLabel("Flagship: " + flagship);
+                flagshipLabel.setForeground(Color.WHITE);
+                flagshipLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
+                flagshipLabel.setFont(new Font("Monospaced", Font.PLAIN, 13));
+                
+                SpinnerNumberModel model = new SpinnerNumberModel(0, 0, 1, 1);
+                JSpinner quantitySpinner = new JSpinner(model);
+                quantitySpinner.setFont(new Font("Monospaced", Font.PLAIN, 13));
+                quantitySpinner.setMaximumSize(new Dimension(80, 30));
+                quantitySpinner.setAlignmentX(Component.CENTER_ALIGNMENT);
+                
+                flagshipPanel.add(flagshipLabel);
+                flagshipPanel.add(Box.createVerticalStrut(5));
+                flagshipPanel.add(quantitySpinner);
+                
+                shipSelectionPanel.add(flagshipPanel);
+                
+                // Store the flagship spinner
+                shipQuantities.put("Flagship:" + flagship, quantitySpinner);
+            }
         }
         
         shipSelectionPanel.revalidate();
@@ -1006,6 +1012,7 @@ public class CombatSimulator extends JFrame {
             case "Arvicon Rex": return "arvicon_rex";
             case "Visz el Vir": return "visz_el_vir";
             case "Memoria": return "memoria";
+            case "Memoria II": return "memoria2";
             case "Ouranos": return "ouranos";
             case "Terror Between": return "terror_between";
             default: return flagshipName.toLowerCase().replace(' ', '_');
