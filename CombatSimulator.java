@@ -595,15 +595,14 @@ public class CombatSimulator extends JFrame {
     private void updateShipSelectionForFaction() {
         String selectedFaction = (String) factionComboBox.getSelectedItem();
         
+        // If "Select Faction" is selected, don't reset upgrades, keep current state
+        if (selectedFaction == null || selectedFaction.equals("Select Faction")) {
+            return; // Keep the current ship selection and upgrades
+        }
+        
         // Clear existing panel and quantities
         shipSelectionPanel.removeAll();
         shipQuantities.clear();
-        
-        if (selectedFaction == null || selectedFaction.equals("Select Faction")) {
-            // Display default ships if no faction selected
-            initializeShipSelectionPanel();
-            return;
-        }
         
         // Get faction-specific unit overrides
         Map<String, String[]> factionUnits = FACTION_SPECIFIC_UNITS.get(selectedFaction);
