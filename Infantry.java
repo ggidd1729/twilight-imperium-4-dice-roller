@@ -11,7 +11,6 @@ public class Infantry extends AbstractShip {
         return switch (mode) {
             case 1 -> 8; // Standard Infantry
             case 2 -> 7; // Upgraded Infantry or Spec Ops 1
-            case 3 -> 6; // Spec Ops 2
             default -> throw new IllegalArgumentException("Invalid mode: " + mode + ". Use 1 for standard, 2 for upgraded or SO1 or 3 for SO2.");
         };
     }
