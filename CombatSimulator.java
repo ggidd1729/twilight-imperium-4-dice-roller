@@ -609,10 +609,17 @@ public class CombatSimulator extends JFrame {
     private void updatePanelsForFaction() {
         String selectedFaction = (String) factionComboBox.getSelectedItem();
         
-        // Return early if faction is null, "Select Faction", or the same as previously selected
-        if (selectedFaction == null || 
-            selectedFaction.equals("Select Faction") || 
-            selectedFaction.equals(previouslySelectedFaction)) {
+        // If "Select Faction" is selected, reset to default state
+        if (selectedFaction == null || selectedFaction.equals("Select Faction")) {
+            // Only reset if we're coming from a valid faction
+            if (previouslySelectedFaction != null && !previouslySelectedFaction.equals("Select Faction")) {
+                resetSimulator();
+            }
+            return;
+        }
+        
+        // Return early if the same faction is selected again
+        if (selectedFaction.equals(previouslySelectedFaction)) {
             return;
         }
         
@@ -623,6 +630,27 @@ public class CombatSimulator extends JFrame {
         updateShipSelectionForFaction();
         updateModifiersForFaction();
         updateUpgradesForFaction();
+        
+        // Enable all controls after updating the panels
+        setControlsEnabled(true);
+    }
+    
+    // Helper method to enable/disable all controls
+    private void setControlsEnabled(boolean enabled) {
+        // Enable/disable ship spinners
+        for (JSpinner spinner : shipQuantities.values()) {
+            spinner.setEnabled(enabled);
+        }
+        
+        // Enable/disable upgrade checkboxes
+        for (JCheckBox checkBox : upgradeCheckboxes) {
+            checkBox.setEnabled(enabled);
+        }
+        
+        // Enable/disable modifier checkboxes
+        for (JCheckBox checkBox : modifierCheckboxes) {
+            checkBox.setEnabled(enabled);
+        }
     }
     
     private void updateShipSelectionForFaction() {
@@ -662,20 +690,20 @@ public class CombatSimulator extends JFrame {
             
             // Add only base version of each unit if upgradeable
             if (variants != null && variants.length > 0) {
-                addShipToPanel(variants[0]); // Add only the base variant
+                addShipToPanel(variants[0], true); // Add only the base variant, enabled
             }
         }
         
         // Handle special cases
         if (selectedFaction.equals("The Naaz-Rokha Alliance")) {
             // Add Z-Grav Eidolon for NRA (after standard ships)
-            addShipToPanel("Z-Grav Eidolon");
+            addShipToPanel("Z-Grav Eidolon", true);
         }
         
         // Add Infantry and Mech for Nekro Virus
         if (selectedFaction.equals("The Nekro Virus")) {
-            addShipToPanel("Infantry I");
-            addShipToPanel("Mech");
+            addShipToPanel("Infantry I", true);
+            addShipToPanel("Mech", true);
         }
         
         // Add the faction's flagship last
@@ -696,6 +724,7 @@ public class CombatSimulator extends JFrame {
             quantitySpinner.setFont(new Font("Monospaced", Font.PLAIN, 13));
             quantitySpinner.setMaximumSize(new Dimension(80, 30));
             quantitySpinner.setAlignmentX(Component.CENTER_ALIGNMENT);
+            quantitySpinner.setEnabled(true); // Make sure it's enabled
             
             flagshipPanel.add(flagshipLabel);
             flagshipPanel.add(Box.createVerticalStrut(5));
@@ -724,6 +753,7 @@ public class CombatSimulator extends JFrame {
             checkBox.setForeground(Color.WHITE);
             checkBox.setFont(new Font("Monospaced", Font.PLAIN, 13));
             checkBox.setOpaque(false);
+            checkBox.setEnabled(true); // Enable since a faction is selected
             
             modifiersPanel.add(checkBox);
             modifierCheckboxes.add(checkBox);
@@ -737,6 +767,7 @@ public class CombatSimulator extends JFrame {
             checkBox.setForeground(Color.WHITE);
             checkBox.setFont(new Font("Monospaced", Font.PLAIN, 13));
             checkBox.setOpaque(false);
+            checkBox.setEnabled(true); // Enable since a faction is selected
             
             modifiersPanel.add(checkBox);
             modifierCheckboxes.add(checkBox);
@@ -786,6 +817,10 @@ public class CombatSimulator extends JFrame {
     }
     
     private void addShipToPanel(String shipName) {
+        addShipToPanel(shipName, false);
+    }
+    
+    private void addShipToPanel(String shipName, boolean enabled) {
         JPanel shipPanel = new JPanel();
         shipPanel.setLayout(new BoxLayout(shipPanel, BoxLayout.Y_AXIS));
         shipPanel.setOpaque(false);
@@ -800,6 +835,7 @@ public class CombatSimulator extends JFrame {
         quantitySpinner.setFont(new Font("Monospaced", Font.PLAIN, 13));
         quantitySpinner.setMaximumSize(new Dimension(80, 30));
         quantitySpinner.setAlignmentX(Component.CENTER_ALIGNMENT);
+        quantitySpinner.setEnabled(enabled);
         
         shipPanel.add(shipLabel);
         shipPanel.add(Box.createVerticalStrut(5));
@@ -824,6 +860,11 @@ public class CombatSimulator extends JFrame {
         addShipToPanel("Dreadnought I");
         addShipToPanel("War Sun");
         
+        // Disable all spinners initially
+        for (JSpinner spinner : shipQuantities.values()) {
+            spinner.setEnabled(false);
+        }
+        
         shipSelectionPanel.revalidate();
         shipSelectionPanel.repaint();
     }
@@ -837,6 +878,7 @@ public class CombatSimulator extends JFrame {
             checkBox.setForeground(Color.WHITE);
             checkBox.setFont(new Font("Monospaced", Font.PLAIN, 13));
             checkBox.setOpaque(false);
+            checkBox.setEnabled(false); // Disabled initially
             
             modifiersPanel.add(checkBox);
             modifierCheckboxes.add(checkBox);
@@ -857,6 +899,11 @@ public class CombatSimulator extends JFrame {
         addShipUpgradeCheckbox("Cruiser II", "Cruiser I");
         addShipUpgradeCheckbox("Carrier II", "Carrier I");
         addShipUpgradeCheckbox("Dreadnought II", "Dreadnought I");
+        
+        // Disable all checkboxes initially
+        for (JCheckBox checkBox : upgradeCheckboxes) {
+            checkBox.setEnabled(false);
+        }
         
         upgradesPanel.revalidate();
         upgradesPanel.repaint();
@@ -944,6 +991,10 @@ public class CombatSimulator extends JFrame {
         upgradeCheckBox.setForeground(Color.WHITE);
         upgradeCheckBox.setFont(new Font("Monospaced", Font.PLAIN, 13));
         upgradeCheckBox.setOpaque(false);
+        
+        // Note: The enabled state is now managed by the caller method
+        // When used in initializeUpgradesPanel(), they will be disabled by the loop after all are added
+        // When used in updateUpgradesForFaction(), they will remain enabled
         
         // Add upgrade functionality
         upgradeCheckBox.addActionListener(e -> {
@@ -1245,12 +1296,13 @@ public class CombatSimulator extends JFrame {
         // Reset ship quantities
         for (JSpinner spinner : shipQuantities.values()) {
             spinner.setValue(0);
+            spinner.setEnabled(false); // Disable spinner
         }
         
         // Reset modifiers
         for (JCheckBox checkBox : modifierCheckboxes) {
             checkBox.setSelected(false);
-            checkBox.setEnabled(true);
+            checkBox.setEnabled(false); // Disable checkbox
         }
         
         // Reset unit upgrades
@@ -1271,6 +1323,7 @@ public class CombatSimulator extends JFrame {
                     updateShipType(baseName, upgradedName, false); // Downgrade
                 }
             }
+            checkBox.setEnabled(false); // Disable checkbox
         }
         
         // Reset faction selection
