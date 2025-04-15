@@ -1440,9 +1440,15 @@ public class CombatSimulator extends JFrame {
                     allPreModifierRolls));
             } else {
                 // For regular ships, show the count
+                // Special handling for Infantry - don't pluralize
+                String displayType = type;
+                if (ships.size() > 1 && !type.equals("Infantry")) {
+                    displayType = type + "s";
+                }
+                
                 resultsArea.append(String.format("%d %s rolled %s",
                     ships.size(),
-                    ships.size() == 1 ? type : type + "s",
+                    displayType,
                     allPreModifierRolls));
             }
             
