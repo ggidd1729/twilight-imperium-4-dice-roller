@@ -663,6 +663,84 @@ public class CombatSimulator extends JFrame {
         // Get faction-specific unit overrides
         Map<String, String[]> factionUnits = FACTION_SPECIFIC_UNITS.get(selectedFaction);
         
+        // Special handling for Nekro Virus - Add regular ships first, then flagship, then Infantry and Mech
+        if (selectedFaction.equals("The Nekro Virus")) {
+            // Add regular ships first (everything except Infantry and Mech)
+            addRegularShipsForNekro(factionUnits);
+            
+            // Add the faction's flagship after regular ships
+            String[] flagships = FACTION_FLAGSHIPS.get(selectedFaction);
+            if (flagships != null && flagships.length > 0) {
+                JPanel flagshipPanel = new JPanel();
+                flagshipPanel.setLayout(new BoxLayout(flagshipPanel, BoxLayout.Y_AXIS));
+                flagshipPanel.setOpaque(false);
+                
+                JLabel flagshipLabel = new JLabel("Flagship: " + flagships[0]);
+                flagshipLabel.setForeground(Color.WHITE);
+                flagshipLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
+                flagshipLabel.setFont(new Font("Monospaced", Font.PLAIN, 13));
+                
+                SpinnerNumberModel model = new SpinnerNumberModel(0, 0, 1, 1);
+                JSpinner quantitySpinner = new JSpinner(model);
+                quantitySpinner.setFont(new Font("Monospaced", Font.PLAIN, 13));
+                quantitySpinner.setMaximumSize(new Dimension(80, 30));
+                quantitySpinner.setAlignmentX(Component.CENTER_ALIGNMENT);
+                quantitySpinner.setEnabled(true);
+                
+                // Add a change listener to show/hide infantry and mech
+                quantitySpinner.addChangeListener(e -> {
+                    boolean shouldShowInfantryMech = (Integer) quantitySpinner.getValue() > 0;
+                    
+                    // Look for existing Infantry and Mech panels
+                    Component[] components = shipSelectionPanel.getComponents();
+                    for (Component component : components) {
+                        if (component instanceof JPanel) {
+                            JPanel panel = (JPanel) component;
+                            Component[] subComponents = panel.getComponents();
+                            for (Component sub : subComponents) {
+                                if (sub instanceof JLabel) {
+                                    JLabel label = (JLabel) sub;
+                                    if (label.getText().equals("Infantry I") || label.getText().equals("Mech")) {
+                                        panel.setVisible(shouldShowInfantryMech);
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    
+                    // Show/hide Infantry upgrade checkbox
+                    for (JCheckBox checkBox : upgradeCheckboxes) {
+                        if (checkBox.getText().contains("Upgrade Infantry")) {
+                            checkBox.setVisible(shouldShowInfantryMech);
+                        }
+                    }
+                    
+                    // Refresh panels
+                    shipSelectionPanel.revalidate();
+                    shipSelectionPanel.repaint();
+                    upgradesPanel.revalidate();
+                    upgradesPanel.repaint();
+                });
+                
+                flagshipPanel.add(flagshipLabel);
+                flagshipPanel.add(Box.createVerticalStrut(5));
+                flagshipPanel.add(quantitySpinner);
+                
+                shipSelectionPanel.add(flagshipPanel);
+                
+                // Store the flagship spinner
+                shipQuantities.put("Flagship:" + flagships[0], quantitySpinner);
+                
+                // Add Infantry and Mech (initially hidden)
+                addShipToPanelForNekro("Infantry I", true, false);
+                addShipToPanelForNekro("Mech", true, false);
+            }
+            
+            shipSelectionPanel.revalidate();
+            shipSelectionPanel.repaint();
+            return;
+        }
+        
         // Ordered list of standard unit types to display
         List<String> unitDisplayOrder = Arrays.asList(
             "Fighter", "Destroyer", "Cruiser", "Carrier", "Dreadnought", "War Sun"
@@ -700,44 +778,95 @@ public class CombatSimulator extends JFrame {
             addShipToPanel("Z-Grav Eidolon", true);
         }
         
-        // Add Infantry and Mech for Nekro Virus
-        if (selectedFaction.equals("The Nekro Virus")) {
-            addShipToPanel("Infantry I", true);
-            addShipToPanel("Mech", true);
-        }
-        
-        // Add the faction's flagship last
-        String[] flagships = FACTION_FLAGSHIPS.get(selectedFaction);
-        if (flagships != null && flagships.length > 0) {
-            // For factions with upgradeable flagships (like Nomad), show only the base flagship
-            JPanel flagshipPanel = new JPanel();
-            flagshipPanel.setLayout(new BoxLayout(flagshipPanel, BoxLayout.Y_AXIS));
-            flagshipPanel.setOpaque(false);
-            
-            JLabel flagshipLabel = new JLabel("Flagship: " + flagships[0]);
-            flagshipLabel.setForeground(Color.WHITE);
-            flagshipLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
-            flagshipLabel.setFont(new Font("Monospaced", Font.PLAIN, 13));
-            
-            SpinnerNumberModel model = new SpinnerNumberModel(0, 0, 1, 1);
-            JSpinner quantitySpinner = new JSpinner(model);
-            quantitySpinner.setFont(new Font("Monospaced", Font.PLAIN, 13));
-            quantitySpinner.setMaximumSize(new Dimension(80, 30));
-            quantitySpinner.setAlignmentX(Component.CENTER_ALIGNMENT);
-            quantitySpinner.setEnabled(true); // Make sure it's enabled
-            
-            flagshipPanel.add(flagshipLabel);
-            flagshipPanel.add(Box.createVerticalStrut(5));
-            flagshipPanel.add(quantitySpinner);
-            
-            shipSelectionPanel.add(flagshipPanel);
-            
-            // Store the flagship spinner
-            shipQuantities.put("Flagship:" + flagships[0], quantitySpinner);
+        // Add the faction's flagship last (for factions other than Nekro Virus)
+        if (!selectedFaction.equals("The Nekro Virus")) {
+            String[] flagships = FACTION_FLAGSHIPS.get(selectedFaction);
+            if (flagships != null && flagships.length > 0) {
+                // For factions with upgradeable flagships (like Nomad), show only the base flagship
+                JPanel flagshipPanel = new JPanel();
+                flagshipPanel.setLayout(new BoxLayout(flagshipPanel, BoxLayout.Y_AXIS));
+                flagshipPanel.setOpaque(false);
+                
+                JLabel flagshipLabel = new JLabel("Flagship: " + flagships[0]);
+                flagshipLabel.setForeground(Color.WHITE);
+                flagshipLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
+                flagshipLabel.setFont(new Font("Monospaced", Font.PLAIN, 13));
+                
+                SpinnerNumberModel model = new SpinnerNumberModel(0, 0, 1, 1);
+                JSpinner quantitySpinner = new JSpinner(model);
+                quantitySpinner.setFont(new Font("Monospaced", Font.PLAIN, 13));
+                quantitySpinner.setMaximumSize(new Dimension(80, 30));
+                quantitySpinner.setAlignmentX(Component.CENTER_ALIGNMENT);
+                quantitySpinner.setEnabled(true); // Make sure it's enabled
+                
+                flagshipPanel.add(flagshipLabel);
+                flagshipPanel.add(Box.createVerticalStrut(5));
+                flagshipPanel.add(quantitySpinner);
+                
+                shipSelectionPanel.add(flagshipPanel);
+                
+                // Store the flagship spinner
+                shipQuantities.put("Flagship:" + flagships[0], quantitySpinner);
+            }
         }
         
         shipSelectionPanel.revalidate();
         shipSelectionPanel.repaint();
+    }
+    
+    // Helper method to add regular ships for Nekro Virus (excluding Infantry and Mech)
+    private void addRegularShipsForNekro(Map<String, String[]> factionUnits) {
+        List<String> unitDisplayOrder = Arrays.asList(
+            "Fighter", "Destroyer", "Cruiser", "Carrier", "Dreadnought", "War Sun"
+        );
+        
+        for (String shipCategory : unitDisplayOrder) {
+            String[] variants = BASE_SHIP_TYPES.get(shipCategory);
+            
+            // Skip Infantry and Mech
+            if (shipCategory.equals("Infantry") || shipCategory.equals("Mech")) {
+                continue;
+            }
+            
+            // Use faction-specific variants if available
+            if (factionUnits != null && factionUnits.containsKey(shipCategory)) {
+                variants = factionUnits.get(shipCategory);
+            }
+            
+            // Add only base version of each unit if upgradeable
+            if (variants != null && variants.length > 0) {
+                addShipToPanel(variants[0], true); // Add only the base variant, enabled
+            }
+        }
+    }
+    
+    // Helper method to add a ship panel specifically for Nekro Virus with visibility control
+    private void addShipToPanelForNekro(String shipName, boolean enabled, boolean visible) {
+        JPanel shipPanel = new JPanel();
+        shipPanel.setLayout(new BoxLayout(shipPanel, BoxLayout.Y_AXIS));
+        shipPanel.setOpaque(false);
+        shipPanel.setVisible(visible);
+        
+        JLabel shipLabel = new JLabel(shipName);
+        shipLabel.setForeground(Color.WHITE);
+        shipLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
+        shipLabel.setFont(new Font("Monospaced", Font.BOLD, 13));
+        
+        SpinnerNumberModel model = new SpinnerNumberModel(0, 0, 20, 1);
+        JSpinner quantitySpinner = new JSpinner(model);
+        quantitySpinner.setFont(new Font("Monospaced", Font.PLAIN, 13));
+        quantitySpinner.setMaximumSize(new Dimension(80, 30));
+        quantitySpinner.setAlignmentX(Component.CENTER_ALIGNMENT);
+        quantitySpinner.setEnabled(enabled);
+        
+        shipPanel.add(shipLabel);
+        shipPanel.add(Box.createVerticalStrut(5));
+        shipPanel.add(quantitySpinner);
+        
+        shipSelectionPanel.add(shipPanel);
+        
+        // Store the spinner for later access
+        shipQuantities.put(shipName, quantitySpinner);
     }
     
     private void updateModifiersForFaction() {
@@ -962,7 +1091,22 @@ public class CombatSimulator extends JFrame {
         
         // Add Infantry upgrade for Nekro
         if (selectedFaction.equals("The Nekro Virus")) {
-            addShipUpgradeCheckbox("Infantry II", "Infantry I");
+            // Get flagship spinner value to determine visibility
+            JSpinner flagshipSpinner = shipQuantities.get("Flagship:Alastor");
+            boolean shouldBeVisible = flagshipSpinner != null && (Integer) flagshipSpinner.getValue() > 0;
+            
+            // Add Infantry upgrade checkbox with visibility based on flagship
+            JCheckBox infantryUpgradeCheckBox = addShipUpgradeCheckboxWithVisibility("Infantry II", "Infantry I", shouldBeVisible);
+            
+            // Add a change listener to the flagship spinner to update the visibility
+            if (flagshipSpinner != null) {
+                flagshipSpinner.addChangeListener(e -> {
+                    boolean visible = (Integer) flagshipSpinner.getValue() > 0;
+                    infantryUpgradeCheckBox.setVisible(visible);
+                    upgradesPanel.revalidate();
+                    upgradesPanel.repaint();
+                });
+            }
         }
         
         // Special handling for Naalu Collective's fighter upgrade
@@ -1021,6 +1165,29 @@ public class CombatSimulator extends JFrame {
     private void addShipUpgradeCheckbox(String upgradedName, String baseName) {
         // Simply delegate to the position-based method, adding at the end
         addShipUpgradeCheckboxAt(upgradedName, baseName, upgradesPanel.getComponentCount());
+    }
+    
+    // Helper to add an upgrade checkbox with controlled visibility
+    private JCheckBox addShipUpgradeCheckboxWithVisibility(String upgradedName, String baseName, boolean visible) {
+        // Remove the " I" suffix from baseName for display
+        String displayName = baseName.endsWith(" I") ? baseName.substring(0, baseName.length() - 2) : baseName;
+        
+        JCheckBox upgradeCheckBox = new JCheckBox("<html>Upgrade " + displayName + "</html>");
+        upgradeCheckBox.setForeground(Color.WHITE);
+        upgradeCheckBox.setFont(new Font("Monospaced", Font.PLAIN, 13));
+        upgradeCheckBox.setOpaque(false);
+        upgradeCheckBox.setVisible(visible);
+        
+        // Add upgrade functionality
+        upgradeCheckBox.addActionListener(e -> {
+            boolean isUpgraded = upgradeCheckBox.isSelected();
+            updateShipType(baseName, upgradedName, isUpgraded);
+        });
+        
+        upgradesPanel.add(upgradeCheckBox);
+        upgradeCheckboxes.add(upgradeCheckBox);
+        
+        return upgradeCheckBox;
     }
     
     private void updateShipType(String baseName, String upgradedName, boolean isUpgraded) {
