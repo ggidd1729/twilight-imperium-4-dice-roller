@@ -20,8 +20,10 @@ public class CombatSimulator extends JFrame {
     private JTextField searchField;
     private JTextArea resultsArea;
     private JPanel modifiersPanel;
+    private JPanel upgradesPanel;
     private Map<String, JSpinner> shipQuantities = new HashMap<>();
     private List<JCheckBox> modifierCheckboxes = new ArrayList<>();
+    private List<JCheckBox> upgradeCheckboxes = new ArrayList<>();
     private ImageIcon backgroundImage;
     
     private static final String[] FACTIONS = {
@@ -478,6 +480,45 @@ public class CombatSimulator extends JFrame {
         
         centerPanel.add(shipScrollPane, BorderLayout.CENTER);
         
+        // Create a panel to hold both upgrades and modifiers
+        JPanel bottomPanel = new JPanel(new BorderLayout());
+        bottomPanel.setOpaque(false);
+        
+        // Unit Upgrades Panel with styled title
+        upgradesPanel = new JPanel(new GridLayout(0, 3, 10, 5));
+        upgradesPanel.setOpaque(false);
+        
+        TitledBorder upgradesBorder = BorderFactory.createTitledBorder(
+                BorderFactory.createLineBorder(Color.GRAY), "Unit Upgrades");
+        upgradesBorder.setTitleFont(new Font("Monospaced", Font.BOLD, 16));
+        upgradesBorder.setTitleColor(Color.WHITE);
+        upgradesPanel.setBorder(upgradesBorder);
+        
+        // Add component listener for upgrades panel
+        upgradesPanel.addComponentListener(new java.awt.event.ComponentAdapter() {
+            @Override
+            public void componentShown(java.awt.event.ComponentEvent e) {
+                try {
+                    TitledBorder border = (TitledBorder) upgradesPanel.getBorder();
+                    int titleWidth = border.getTitleFont().getStringBounds(border.getTitle(), 
+                            ((Graphics2D)upgradesPanel.getGraphics()).getFontRenderContext()).getBounds().width;
+                    int titleX = upgradesPanel.getInsets().left + 5;
+                    int titleY = 0;
+                    
+                    JPanel titleBackPanel = new JPanel();
+                    titleBackPanel.setBounds(titleX - 5, titleY, titleWidth + 10, 22);
+                    titleBackPanel.setBackground(Color.BLACK);
+                    upgradesPanel.add(titleBackPanel);
+                    upgradesPanel.setComponentZOrder(titleBackPanel, 0);
+                } catch (Exception ex) {
+                    // Handle potential null pointer exception
+                }
+            }
+        });
+        
+        initializeUpgradesPanel();
+        bottomPanel.add(upgradesPanel, BorderLayout.NORTH);
+        
         // Modifiers Panel with styled title
         modifiersPanel = new JPanel(new GridLayout(0, 3, 10, 5));
         modifiersPanel.setOpaque(false);
@@ -511,8 +552,9 @@ public class CombatSimulator extends JFrame {
         });
         
         initializeModifiersPanel();
+        bottomPanel.add(modifiersPanel, BorderLayout.SOUTH);
         
-        centerPanel.add(modifiersPanel, BorderLayout.SOUTH);
+        centerPanel.add(bottomPanel, BorderLayout.SOUTH);
         
         contentPanel.add(centerPanel, BorderLayout.CENTER);
         
@@ -587,9 +629,12 @@ public class CombatSimulator extends JFrame {
                 continue;
             }
             
-            // Add each ship variant
-            for (String variant : variants) {
-                addShipToPanel(variant);
+            // Add only base version of each unit if upgradeable
+            // Upgrades will be handled by the upgrade panel
+            if (variants.length > 1) {
+                addShipToPanel(variants[0]); // Add only the base variant
+            } else {
+                addShipToPanel(variants[0]); // Add the only variant
             }
         }
         
@@ -602,35 +647,37 @@ public class CombatSimulator extends JFrame {
         // Add the faction's flagship
         String[] flagships = FACTION_FLAGSHIPS.get(selectedFaction);
         if (flagships != null && flagships.length > 0) {
-            for (String flagship : flagships) {
-                JPanel flagshipPanel = new JPanel();
-                flagshipPanel.setLayout(new BoxLayout(flagshipPanel, BoxLayout.Y_AXIS));
-                flagshipPanel.setOpaque(false);
-                
-                JLabel flagshipLabel = new JLabel("Flagship: " + flagship);
-                flagshipLabel.setForeground(Color.WHITE);
-                flagshipLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
-                flagshipLabel.setFont(new Font("Monospaced", Font.PLAIN, 13));
-                
-                SpinnerNumberModel model = new SpinnerNumberModel(0, 0, 1, 1);
-                JSpinner quantitySpinner = new JSpinner(model);
-                quantitySpinner.setFont(new Font("Monospaced", Font.PLAIN, 13));
-                quantitySpinner.setMaximumSize(new Dimension(80, 30));
-                quantitySpinner.setAlignmentX(Component.CENTER_ALIGNMENT);
-                
-                flagshipPanel.add(flagshipLabel);
-                flagshipPanel.add(Box.createVerticalStrut(5));
-                flagshipPanel.add(quantitySpinner);
-                
-                shipSelectionPanel.add(flagshipPanel);
-                
-                // Store the flagship spinner
-                shipQuantities.put("Flagship:" + flagship, quantitySpinner);
-            }
+            // For factions with upgradeable flagships (like Nomad), show only the base flagship
+            JPanel flagshipPanel = new JPanel();
+            flagshipPanel.setLayout(new BoxLayout(flagshipPanel, BoxLayout.Y_AXIS));
+            flagshipPanel.setOpaque(false);
+            
+            JLabel flagshipLabel = new JLabel("Flagship: " + flagships[0]);
+            flagshipLabel.setForeground(Color.WHITE);
+            flagshipLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
+            flagshipLabel.setFont(new Font("Monospaced", Font.PLAIN, 13));
+            
+            SpinnerNumberModel model = new SpinnerNumberModel(0, 0, 1, 1);
+            JSpinner quantitySpinner = new JSpinner(model);
+            quantitySpinner.setFont(new Font("Monospaced", Font.PLAIN, 13));
+            quantitySpinner.setMaximumSize(new Dimension(80, 30));
+            quantitySpinner.setAlignmentX(Component.CENTER_ALIGNMENT);
+            
+            flagshipPanel.add(flagshipLabel);
+            flagshipPanel.add(Box.createVerticalStrut(5));
+            flagshipPanel.add(quantitySpinner);
+            
+            shipSelectionPanel.add(flagshipPanel);
+            
+            // Store the flagship spinner
+            shipQuantities.put("Flagship:" + flagships[0], quantitySpinner);
         }
         
         shipSelectionPanel.revalidate();
         shipSelectionPanel.repaint();
+        
+        // Update the upgrades panel for this faction
+        updateUpgradesForFaction();
     }
     
     private void updateModifiersForFaction() {
@@ -739,17 +786,12 @@ public class CombatSimulator extends JFrame {
         shipSelectionPanel.removeAll();
         shipQuantities.clear();
         
-        // Add default ship options (no faction selected)
+        // Add default ship options (no faction selected) - only level 1 ships
         addShipToPanel("Carrier I");
-        addShipToPanel("Carrier II");
         addShipToPanel("Cruiser I");
-        addShipToPanel("Cruiser II");
         addShipToPanel("Destroyer I");
-        addShipToPanel("Destroyer II");
         addShipToPanel("Dreadnought I");
-        addShipToPanel("Dreadnought II");
         addShipToPanel("Fighter I");
-        addShipToPanel("Fighter II");
         addShipToPanel("War Sun");
         
         shipSelectionPanel.revalidate();
@@ -772,6 +814,179 @@ public class CombatSimulator extends JFrame {
         
         modifiersPanel.revalidate();
         modifiersPanel.repaint();
+    }
+    
+    private void initializeUpgradesPanel() {
+        upgradesPanel.removeAll();
+        upgradeCheckboxes.clear();
+        
+        // Add default upgrade options for standard ships
+        addShipUpgradeCheckbox("Carrier II", "Carrier I");
+        addShipUpgradeCheckbox("Cruiser II", "Cruiser I");
+        addShipUpgradeCheckbox("Destroyer II", "Destroyer I");
+        addShipUpgradeCheckbox("Dreadnought II", "Dreadnought I");
+        addShipUpgradeCheckbox("Fighter II", "Fighter I");
+        
+        upgradesPanel.revalidate();
+        upgradesPanel.repaint();
+    }
+    
+    private void updateUpgradesForFaction() {
+        String selectedFaction = (String) factionComboBox.getSelectedItem();
+        
+        // Clear all existing upgrades
+        upgradesPanel.removeAll();
+        upgradeCheckboxes.clear();
+        
+        if (selectedFaction == null || selectedFaction.equals("Select Faction")) {
+            // No upgrades for "Select Faction"
+            upgradesPanel.revalidate();
+            upgradesPanel.repaint();
+            return;
+        }
+        
+        // Add standard upgrades for most ships
+        addShipUpgradeCheckbox("Carrier II", "Carrier I");
+        addShipUpgradeCheckbox("Cruiser II", "Cruiser I");
+        addShipUpgradeCheckbox("Destroyer II", "Destroyer I");
+        addShipUpgradeCheckbox("Dreadnought II", "Dreadnought I");
+        addShipUpgradeCheckbox("Fighter II", "Fighter I");
+        
+        // Add faction-specific upgrades
+        switch (selectedFaction) {
+            case "The Embers of Muaat":
+                addShipUpgradeCheckbox("Prototype War Sun II", "Prototype War Sun I");
+                break;
+            case "The Federation of Sol":
+                addShipUpgradeCheckbox("Advanced Carrier II", "Advanced Carrier I");
+                break;
+            case "The Sardakk N'orr":
+                addShipUpgradeCheckbox("Exotrireme II", "Exotrireme I");
+                break;
+            case "The Titans of Ul":
+                addShipUpgradeCheckbox("Saturn Engine II", "Saturn Engine I");
+                break;
+            case "The L1Z1X Mindnet":
+                addShipUpgradeCheckbox("Super Dreadnought II", "Super Dreadnought I");
+                break;
+            case "The Naalu Collective":
+                addShipUpgradeCheckbox("Hybrid Crystal Fighter II", "Hybrid Crystal Fighter I");
+                break;
+            case "The Argent Flight":
+                addShipUpgradeCheckbox("Strike Wing Alpha II", "Strike Wing Alpha I");
+                break;
+            case "The Nekro Virus":
+                addShipUpgradeCheckbox("Infantry II", "Infantry I");
+                break;
+            case "The Nomad":
+                addShipUpgradeCheckbox("Memoria II", "Memoria");
+                break;
+            case "The Naaz-Rokha Alliance":
+                // No specific unit upgrades, they have Z-Grav Eidolon which doesn't upgrade
+                break;
+        }
+        
+        // If no upgrades were added, show a message
+        if (upgradeCheckboxes.isEmpty()) {
+            JLabel noUpgradesLabel = new JLabel("No upgrades available for this faction");
+            noUpgradesLabel.setForeground(Color.WHITE);
+            noUpgradesLabel.setFont(new Font("Monospaced", Font.PLAIN, 13));
+            upgradesPanel.add(noUpgradesLabel);
+        }
+        
+        upgradesPanel.revalidate();
+        upgradesPanel.repaint();
+    }
+    
+    private void addShipUpgradeCheckbox(String upgradedName, String baseName) {
+        JCheckBox upgradeCheckBox = new JCheckBox("<html>Upgrade to " + upgradedName + "</html>");
+        upgradeCheckBox.setForeground(Color.WHITE);
+        upgradeCheckBox.setFont(new Font("Monospaced", Font.PLAIN, 13));
+        upgradeCheckBox.setOpaque(false);
+        
+        // Add upgrade functionality
+        upgradeCheckBox.addActionListener(e -> {
+            boolean isUpgraded = upgradeCheckBox.isSelected();
+            updateShipType(baseName, upgradedName, isUpgraded);
+        });
+        
+        upgradesPanel.add(upgradeCheckBox);
+        upgradeCheckboxes.add(upgradeCheckBox);
+    }
+    
+    private void updateShipType(String baseName, String upgradedName, boolean isUpgraded) {
+        // Determine the current and target names
+        String currentName = isUpgraded ? baseName : upgradedName;
+        String targetName = isUpgraded ? upgradedName : baseName;
+        
+        // Check if the current ship spinner exists
+        JSpinner currentSpinner = shipQuantities.get(currentName);
+        if (currentSpinner == null) {
+            // For flagships, check with "Flagship:" prefix
+            currentSpinner = shipQuantities.get("Flagship:" + currentName);
+            if (currentSpinner == null) {
+                return; // Current ship not found
+            }
+        }
+        
+        // Special handling for flagships (like Memoria/Memoria II)
+        if (baseName.equals("Memoria") && upgradedName.equals("Memoria II")) {
+            Component[] components = shipSelectionPanel.getComponents();
+            for (Component component : components) {
+                if (component instanceof JPanel) {
+                    JPanel panel = (JPanel) component;
+                    Component[] subComponents = panel.getComponents();
+                    for (Component sub : subComponents) {
+                        if (sub instanceof JLabel) {
+                            JLabel label = (JLabel) sub;
+                            if (label.getText().contains("Flagship: " + currentName)) {
+                                // Update the label text
+                                label.setText("Flagship: " + targetName);
+                                
+                                // Update the spinner key
+                                JSpinner spinner = shipQuantities.remove("Flagship:" + currentName);
+                                if (spinner != null) {
+                                    shipQuantities.put("Flagship:" + targetName, spinner);
+                                }
+                                
+                                shipSelectionPanel.revalidate();
+                                shipSelectionPanel.repaint();
+                                return;
+                            }
+                        }
+                    }
+                }
+            }
+            return;
+        }
+        
+        // For regular ships, update the panel
+        Component[] components = shipSelectionPanel.getComponents();
+        for (Component component : components) {
+            if (component instanceof JPanel) {
+                JPanel panel = (JPanel) component;
+                Component[] subComponents = panel.getComponents();
+                for (Component sub : subComponents) {
+                    if (sub instanceof JLabel) {
+                        JLabel label = (JLabel) sub;
+                        if (label.getText().equals(currentName)) {
+                            // Update the label text
+                            label.setText(targetName);
+                            
+                            // Update the spinner key
+                            JSpinner spinner = shipQuantities.remove(currentName);
+                            if (spinner != null) {
+                                shipQuantities.put(targetName, spinner);
+                            }
+                            
+                            shipSelectionPanel.revalidate();
+                            shipSelectionPanel.repaint();
+                            return;
+                        }
+                    }
+                }
+            }
+        }
     }
     
     private void performCombatRoll() {
@@ -980,6 +1195,21 @@ public class CombatSimulator extends JFrame {
             checkBox.setEnabled(true);
         }
         
+        // Reset unit upgrades
+        for (JCheckBox checkBox : upgradeCheckboxes) {
+            // Reset upgrades and update ship labels
+            if (checkBox.isSelected()) {
+                checkBox.setSelected(false);
+                // Extract the upgrade names from the checkbox text
+                String checkboxText = checkBox.getText();
+                if (checkboxText.contains("Upgrade to ")) {
+                    String upgradedName = checkboxText.substring(checkboxText.indexOf("Upgrade to ") + 11, checkboxText.indexOf("</html>"));
+                    String baseName = getBaseNameFromUpgradeName(upgradedName);
+                    updateShipType(baseName, upgradedName, false); // Downgrade
+                }
+            }
+        }
+        
         // Reset faction selection
         factionComboBox.setSelectedIndex(0);
 
@@ -988,6 +1218,25 @@ public class CombatSimulator extends JFrame {
         
         // Clear results
         resultsArea.setText("");
+        
+        // Reinitialize ship selection panel
+        initializeShipSelectionPanel();
+        
+        // Reinitialize upgrades panel
+        initializeUpgradesPanel();
+    }
+    
+    // Helper method to determine base name from upgrade name
+    private String getBaseNameFromUpgradeName(String upgradedName) {
+        if (upgradedName.endsWith(" II")) {
+            return upgradedName.substring(0, upgradedName.length() - 3) + " I";
+        } else if (upgradedName.equals("Memoria II")) {
+            return "Memoria";
+        } else if (upgradedName.contains("II")) {
+            // For other faction-specific units
+            return upgradedName.replace("II", "I");
+        }
+        return upgradedName;
     }
     
     private String convertFlagshipNameToCode(String flagshipName) {
