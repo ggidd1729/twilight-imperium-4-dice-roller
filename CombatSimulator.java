@@ -315,8 +315,7 @@ public class CombatSimulator extends JFrame {
             // Only update ships and modifiers if the event was triggered by user selection
             // and not just by highlighting with arrow keys
             if (e.getActionCommand().equals("comboBoxEdited") || e.getModifiers() != 0) {
-                updateShipSelectionForFaction();
-                updateModifiersForFaction();
+                updatePanelsForFaction();
             }
         });
         factionPanel.add(factionComboBox);
@@ -326,8 +325,7 @@ public class CombatSimulator extends JFrame {
             @Override
             public void mouseClicked(java.awt.event.MouseEvent evt) {
                 // When mouse clicked, confirm the selection and update UI
-                updateShipSelectionForFaction();
-                updateModifiersForFaction();
+                updatePanelsForFaction();
             }
         });
         
@@ -360,8 +358,8 @@ public class CombatSimulator extends JFrame {
             }
         });
 
-        // Add key listeners to the search field for keyboard navigation
-        searchField.addKeyListener(new KeyAdapter() {
+        // Create a common key handler for both search field and combo box
+        KeyAdapter keyHandler = new KeyAdapter() {
             @Override
             public void keyPressed(KeyEvent e) {
                 int keyCode = e.getKeyCode();
@@ -374,7 +372,6 @@ public class CombatSimulator extends JFrame {
                             if (nextIndex < factionComboBox.getModel().getSize()) {
                                 factionComboBox.setSelectedIndex(nextIndex);
                             }
-                            // Prevent default behavior
                             e.consume();
                             break;
                             
@@ -384,21 +381,14 @@ public class CombatSimulator extends JFrame {
                             if (prevIndex >= 0) {
                                 factionComboBox.setSelectedIndex(prevIndex);
                             }
-                            // Prevent default behavior
                             e.consume();
                             break;
                             
                         case KeyEvent.VK_ENTER:
-                            // Explicitly commit selection
+                            // Commit selection and update UI
                             Object selectedItem = factionComboBox.getSelectedItem();
-                            SearchableComboBoxModel model = (SearchableComboBoxModel) factionComboBox.getModel();
-                            model.setSelectedItem(selectedItem);
-                            
-                            // Update UI based on selection
-                            updateShipSelectionForFaction();
-                            updateModifiersForFaction();
-                            
-                            // Close dropdown and shift focus
+                            ((SearchableComboBoxModel) factionComboBox.getModel()).setSelectedItem(selectedItem);
+                            updatePanelsForFaction();
                             factionComboBox.setPopupVisible(false);
                             mainPanel.requestFocusInWindow();
                             break;
@@ -409,11 +399,15 @@ public class CombatSimulator extends JFrame {
                             break;
                     }
                 } else if (keyCode == KeyEvent.VK_DOWN) {
-                    // If dropdown isn't visible, show it when pressing down arrow
+                    // Show dropdown when pressing down arrow
                     factionComboBox.setPopupVisible(true);
                 }
             }
-        });
+        };
+
+        // Add the key handler to both components
+        searchField.addKeyListener(keyHandler);
+        factionComboBox.addKeyListener(keyHandler);
 
         // Add focus listener to improve search field behavior
         searchField.addFocusListener(new FocusAdapter() {
@@ -591,13 +585,19 @@ public class CombatSimulator extends JFrame {
         mainPanel.add(contentPanel, BorderLayout.CENTER);
         setContentPane(mainPanel);
     }
+
+    private void updatePanelsForFaction() {
+        updateShipSelectionForFaction();
+        updateModifiersForFaction();
+        updateUpgradesForFaction();
+    }
     
     private void updateShipSelectionForFaction() {
         String selectedFaction = (String) factionComboBox.getSelectedItem();
         
-        // If "Select Faction" is selected, don't reset upgrades, keep current state
+        // If "Select Faction" is selected, don't reset ships, keep current state
         if (selectedFaction == null || selectedFaction.equals("Select Faction")) {
-            return; // Keep the current ship selection and upgrades
+            return; // Keep the current ship selection
         }
         
         // Clear existing panel and quantities
@@ -674,9 +674,6 @@ public class CombatSimulator extends JFrame {
         
         shipSelectionPanel.revalidate();
         shipSelectionPanel.repaint();
-        
-        // Update the upgrades panel for this faction
-        updateUpgradesForFaction();
     }
     
     private void updateModifiersForFaction() {
@@ -832,17 +829,15 @@ public class CombatSimulator extends JFrame {
     
     private void updateUpgradesForFaction() {
         String selectedFaction = (String) factionComboBox.getSelectedItem();
+
+        // If "Select Faction" is selected, don't reset upgrades, keep current state
+        if (selectedFaction == null || selectedFaction.equals("Select Faction")) {
+            return; // Keep the current upgrades
+        }
         
         // Clear all existing upgrades
         upgradesPanel.removeAll();
         upgradeCheckboxes.clear();
-        
-        if (selectedFaction == null || selectedFaction.equals("Select Faction")) {
-            // No upgrades for "Select Faction"
-            upgradesPanel.revalidate();
-            upgradesPanel.repaint();
-            return;
-        }
         
         // Add standard upgrades for most ships
         addShipUpgradeCheckbox("Carrier II", "Carrier I");
