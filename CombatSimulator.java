@@ -6,7 +6,6 @@ import javax.swing.event.DocumentListener;
 import java.awt.*;
 import java.util.*;
 import java.util.List;
-import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 import java.awt.event.KeyAdapter;
@@ -672,10 +671,9 @@ public class CombatSimulator extends JFrame {
                 JPanel winnuPanel = new JPanel(new BorderLayout(5, 0));
                 winnuPanel.setOpaque(false);
                 
-                JCheckBox flagshipCheckBox = new JCheckBox("<html>Salai Sai Corian's Ability<br>(roll additional dice)</html>");
-                flagshipCheckBox.setForeground(Color.WHITE);
-                flagshipCheckBox.setFont(new Font("Monospaced", Font.PLAIN, 13));
-                flagshipCheckBox.setOpaque(false);
+                JLabel flagshipLabel = new JLabel("<html>Salai Sai Corian's Ability<br>(set combat dice count)</html>");
+                flagshipLabel.setForeground(Color.WHITE);
+                flagshipLabel.setFont(new Font("Monospaced", Font.PLAIN, 13));
                 
                 // Create a panel for the spinner
                 JPanel spinnerPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 5, 0));
@@ -689,7 +687,7 @@ public class CombatSimulator extends JFrame {
                 JPanel spinnerControlPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 5, 0));
                 spinnerControlPanel.setOpaque(false);
                 
-                SpinnerNumberModel model = new SpinnerNumberModel(1, 1, 5, 1);
+                SpinnerNumberModel model = new SpinnerNumberModel(0, 0, 100, 1);
                 JSpinner diceSpinner = new JSpinner(model);
                 diceSpinner.setPreferredSize(new Dimension(60, 25));
                 diceSpinner.setMaximumSize(new Dimension(80, 50000));
@@ -697,21 +695,13 @@ public class CombatSimulator extends JFrame {
                 
                 spinnerPanel.add(diceSpinner);
                 
-                // Add checkbox to LEFT and spinner panel to RIGHT
-                winnuPanel.add(flagshipCheckBox, BorderLayout.WEST);
+                winnuPanel.add(flagshipLabel, BorderLayout.WEST);
                 winnuPanel.add(spinnerPanel, BorderLayout.CENTER);
                 
                 modifiersPanel.add(winnuPanel);
-                modifierCheckboxes.add(flagshipCheckBox);
                 
                 // Store the spinner for later access
-                shipQuantities.put("WinnuFlagshipExtraDice", diceSpinner);
-                
-                // Enable/disable the spinner based on checkbox selection
-                flagshipCheckBox.addActionListener(e -> {
-                    diceSpinner.setEnabled(flagshipCheckBox.isSelected());
-                });
-                diceSpinner.setEnabled(false);
+                shipQuantities.put("WinnuFlagshipDice", diceSpinner);
             }
         }
         
@@ -851,19 +841,12 @@ public class CombatSimulator extends JFrame {
         }
         
         // Check for Winnu flagship special ability
-        AtomicBoolean hasWinnuFlagshipAbility = new AtomicBoolean(false);
-        AtomicInteger extraWinnuDice = new AtomicInteger(0);
+        AtomicInteger winnuFlagshipDice = new AtomicInteger(0);
         
         if (selectedFaction.equals("The Winnu")) {
-            for (JCheckBox checkBox : modifierCheckboxes) {
-                if (checkBox.isSelected() && checkBox.getText().contains("Salai Sai Corian's Ability")) {
-                    hasWinnuFlagshipAbility.set(true);
-                    JSpinner extraDiceSpinner = shipQuantities.get("WinnuFlagshipExtraDice");
-                    if (extraDiceSpinner != null) {
-                        extraWinnuDice.set((Integer) extraDiceSpinner.getValue());
-                    }
-                    break;
-                }
+            JSpinner diceSpinner = shipQuantities.get("WinnuFlagshipDice");
+            if (diceSpinner != null) {
+                winnuFlagshipDice.set((Integer) diceSpinner.getValue());
             }
         }
 
@@ -908,7 +891,20 @@ public class CombatSimulator extends JFrame {
         
         resultsArea.append("== ROLLING FOR COMBAT ==\n");
         
-        Map<String, List<Ship>> groupedShips = fleet.stream()
+        // Check for Winnu flagship with 0 dice and display message separately
+        if (fleet.stream().anyMatch(ship -> ship instanceof Flagship && ((Flagship)ship).isWinnu())) {
+            int diceCount = winnuFlagshipDice.get();
+            if (diceCount == 0) {
+                resultsArea.append("Flagship has 0 dice - no combat rolls\n");
+            }
+        }
+        
+        // Filter out Winnu flagships with 0 dice before grouping
+        List<Ship> filteredFleet = fleet.stream()
+            .filter(ship -> !(ship instanceof Flagship && ((Flagship)ship).isWinnu() && winnuFlagshipDice.get() == 0))
+            .collect(Collectors.toList());
+        
+        Map<String, List<Ship>> groupedShips = filteredFleet.stream()
             .collect(Collectors.groupingBy(Ship::getShipType));
         
         AtomicInteger grandTotalHits = new AtomicInteger(0);
@@ -920,13 +916,11 @@ public class CombatSimulator extends JFrame {
             boolean anyModified = false;
             
             for (Ship ship : ships) {
-                // Handle Winnu flagship extra dice
-                if (hasWinnuFlagshipAbility.get() && 
-                    ship instanceof Flagship && 
-                    ((Flagship)ship).isWinnu()) {
-                    
-                    // Roll extra dice for Winnu flagship
-                    for (int i = 0; i < extraWinnuDice.get(); i++) {
+                // Handle Winnu flagship dice
+                if (ship instanceof Flagship && ((Flagship)ship).isWinnu()) {
+                    // Roll dice for Winnu flagship - use spinner value directly
+                    int diceCount = winnuFlagshipDice.get();
+                    for (int i = 0; i < diceCount; i++) {
                         CombatResult result = ship.rollDice(allModifiers, fleet);
                         totalHits += result.getHits();
                         allPreModifierRolls.addAll(result.getPreModifierRolls());
@@ -935,6 +929,7 @@ public class CombatSimulator extends JFrame {
                             anyModified = true;
                         }
                     }
+                    continue;
                 }
                 
                 CombatResult result = ship.rollDice(allModifiers, fleet);
@@ -947,10 +942,18 @@ public class CombatSimulator extends JFrame {
             }
             
             // Print results
-            resultsArea.append(String.format("%d %s rolled %s",
-                ships.size(),
-                ships.size() == 1 ? type : type + "s",
-                allPreModifierRolls));
+            if (type.equals("Flagship") ) {
+                // For flagships, don't display a number
+                resultsArea.append(String.format("%s rolled %s",
+                    type,
+                    allPreModifierRolls));
+            } else {
+                // For regular ships, show the count
+                resultsArea.append(String.format("%d %s rolled %s",
+                    ships.size(),
+                    ships.size() == 1 ? type : type + "s",
+                    allPreModifierRolls));
+            }
             
             // Only print post-modifier rolls if modifications were applied
             if (anyModified) {
