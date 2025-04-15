@@ -198,10 +198,6 @@ public class CombatSimulator extends JFrame {
         UNIT_NAME_TO_CODE.put("Strike Wing Alpha I", "d2");
         UNIT_NAME_TO_CODE.put("Strike Wing Alpha II", "d3");
         UNIT_NAME_TO_CODE.put("Z-Grav Eidolon", "z_grav_eidolon");
-        
-        // Flagships
-        UNIT_NAME_TO_CODE.put("Memoria", "memoria");
-        UNIT_NAME_TO_CODE.put("Memoria II", "memoria2");
     }
     
     // Custom combo box model to implement search functionality
