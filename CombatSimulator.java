@@ -935,7 +935,10 @@ public class CombatSimulator extends JFrame {
     
     // Helper to add an upgrade checkbox at a specific position
     private void addShipUpgradeCheckboxAt(String upgradedName, String baseName, int position) {
-        JCheckBox upgradeCheckBox = new JCheckBox("<html>Upgrade to " + upgradedName + "</html>");
+        // Remove the " I" suffix from baseName for display
+        String displayName = baseName.endsWith(" I") ? baseName.substring(0, baseName.length() - 2) : baseName;
+        
+        JCheckBox upgradeCheckBox = new JCheckBox("<html>Upgrade " + displayName + "</html>");
         upgradeCheckBox.setForeground(Color.WHITE);
         upgradeCheckBox.setFont(new Font("Monospaced", Font.PLAIN, 13));
         upgradeCheckBox.setOpaque(false);
@@ -1253,11 +1256,16 @@ public class CombatSimulator extends JFrame {
             // Reset upgrades and update ship labels
             if (checkBox.isSelected()) {
                 checkBox.setSelected(false);
-                // Extract the upgrade names from the checkbox text
+                // Extract the base name from the checkbox text
                 String checkboxText = checkBox.getText();
-                if (checkboxText.contains("Upgrade to ")) {
-                    String upgradedName = checkboxText.substring(checkboxText.indexOf("Upgrade to ") + 11, checkboxText.indexOf("</html>"));
-                    String baseName = getBaseNameFromUpgradeName(upgradedName);
+                if (checkboxText.contains("Upgrade ")) {
+                    String displayName = checkboxText.substring(checkboxText.indexOf("Upgrade ") + 8, checkboxText.indexOf("</html>"));
+                    // If this is a base name without "I", we need to add it back for processing
+                    String baseName = displayName;
+                    if (!displayName.endsWith(" I") && !displayName.equals("Memoria") && !displayName.equals("Mech") && !displayName.equals("War Sun")) {
+                        baseName = displayName + " I";
+                    }
+                    String upgradedName = getUpgradedNameFromBaseName(baseName);
                     updateShipType(baseName, upgradedName, false); // Downgrade
                 }
             }
@@ -1279,17 +1287,17 @@ public class CombatSimulator extends JFrame {
         initializeUpgradesPanel();
     }
     
-    // Helper method to determine base name from upgrade name
-    private String getBaseNameFromUpgradeName(String upgradedName) {
-        if (upgradedName.endsWith(" II")) {
-            return upgradedName.substring(0, upgradedName.length() - 3) + " I";
-        } else if (upgradedName.equals("Memoria II")) {
-            return "Memoria";
-        } else if (upgradedName.contains("II")) {
+    // Helper method to determine upgraded name from base name
+    private String getUpgradedNameFromBaseName(String baseName) {
+        if (baseName.endsWith(" I")) {
+            return baseName.substring(0, baseName.length() - 2) + " II";
+        } else if (baseName.equals("Memoria")) {
+            return "Memoria II";
+        } else if (baseName.contains("I")) {
             // For other faction-specific units
-            return upgradedName.replace("II", "I");
+            return baseName.replace("I", "II");
         }
-        return upgradedName;
+        return baseName;
     }
     
     private String convertFlagshipNameToCode(String flagshipName) {
