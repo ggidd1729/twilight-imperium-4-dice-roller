@@ -44,7 +44,7 @@ public class CombatSimulator extends JFrame {
         BASE_SHIP_TYPES.put("Fighter", new String[]{"Fighter I", "Fighter II"});
         BASE_SHIP_TYPES.put("War Sun", new String[]{"War Sun"});
         // Infantry and Mech only for Nekro by default
-        BASE_SHIP_TYPES.put("Infantry", new String[]{"Infantry I", "Infantry II/Spec Ops I"});
+        BASE_SHIP_TYPES.put("Infantry", new String[]{"Infantry I", "Infantry II"});
         BASE_SHIP_TYPES.put("Mech", new String[]{"Mech"});
     }
     
@@ -93,7 +93,7 @@ public class CombatSimulator extends JFrame {
         
         // Enable Infantry and Mech for Nekro
         Map<String, String[]> nekroUnits = new HashMap<>();
-        nekroUnits.put("Infantry", new String[]{"Infantry I", "Infantry II/Spec Ops I", "Spec Ops II"});
+        nekroUnits.put("Infantry", new String[]{"Infantry I", "Infantry II"});
         nekroUnits.put("Mech", new String[]{"Mech"});
         FACTION_SPECIFIC_UNITS.put("The Nekro Virus", nekroUnits);
     }
@@ -177,8 +177,7 @@ public class CombatSimulator extends JFrame {
         UNIT_NAME_TO_CODE.put("Fighter II", "f2");
         UNIT_NAME_TO_CODE.put("Fighter III", "f3");
         UNIT_NAME_TO_CODE.put("Infantry I", "i");
-        UNIT_NAME_TO_CODE.put("Infantry II/Spec Ops I", "i2");
-        UNIT_NAME_TO_CODE.put("Spec Ops II", "i3");
+        UNIT_NAME_TO_CODE.put("Infantry II", "i2");
         UNIT_NAME_TO_CODE.put("Mech", "m");
         UNIT_NAME_TO_CODE.put("War Sun", "ws");
         
@@ -1048,7 +1047,6 @@ public class CombatSimulator extends JFrame {
             case "f3" -> new Fighter(3);
             case "i" -> new Infantry();
             case "i2" -> new Infantry(2);
-            case "i3" -> new Infantry(3);
             case "m" -> new Mech();
             case "ws" -> new WarSun();
             case "z_grav_eidolon" -> new Mech(2, 8);
