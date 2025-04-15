@@ -58,14 +58,14 @@ public class CombatSimulator extends JFrame {
     // Base ship types available to most factions
     private static final Map<String, String[]> BASE_SHIP_TYPES = new HashMap<>();
     static {
-        BASE_SHIP_TYPES.put("Carrier", new String[]{"Carrier I", "Carrier II"});
-        BASE_SHIP_TYPES.put("Cruiser", new String[]{"Cruiser I", "Cruiser II"});
-        BASE_SHIP_TYPES.put("Destroyer", new String[]{"Destroyer I", "Destroyer II"});
-        BASE_SHIP_TYPES.put("Dreadnought", new String[]{"Dreadnought I", "Dreadnought II"});
-        BASE_SHIP_TYPES.put("Fighter", new String[]{"Fighter I", "Fighter II"});
+        BASE_SHIP_TYPES.put("Carrier", new String[]{"Carrier", "Carrier II"});
+        BASE_SHIP_TYPES.put("Cruiser", new String[]{"Cruiser", "Cruiser II"});
+        BASE_SHIP_TYPES.put("Destroyer", new String[]{"Destroyer", "Destroyer II"});
+        BASE_SHIP_TYPES.put("Dreadnought", new String[]{"Dreadnought", "Dreadnought II"});
+        BASE_SHIP_TYPES.put("Fighter", new String[]{"Fighter", "Fighter II"});
         BASE_SHIP_TYPES.put("War Sun", new String[]{"War Sun"});
         // Infantry and Mech only for Nekro by default
-        BASE_SHIP_TYPES.put("Infantry", new String[]{"Infantry I", "Infantry II"});
+        BASE_SHIP_TYPES.put("Infantry", new String[]{"Infantry", "Infantry II"});
         BASE_SHIP_TYPES.put("Mech", new String[]{"Mech"});
     }
     
@@ -74,37 +74,37 @@ public class CombatSimulator extends JFrame {
     static {
         // Sardakk N'orr - Exotriremes
         Map<String, String[]> sardakkUnits = new HashMap<>();
-        sardakkUnits.put("Dreadnought", new String[]{"Exotrireme I", "Exotrireme II"});
+        sardakkUnits.put("Dreadnought", new String[]{"Exotrireme", "Exotrireme II"});
         FACTION_SPECIFIC_UNITS.put("The Sardakk N'orr", sardakkUnits);
 
         // Federation of Sol - Advanced Carriers
         Map<String, String[]> solUnits = new HashMap<>();
-        solUnits.put("Carrier", new String[]{"Advanced Carrier I", "Advanced Carrier II"});
+        solUnits.put("Carrier", new String[]{"Advanced Carrier", "Advanced Carrier II"});
         FACTION_SPECIFIC_UNITS.put("The Federation of Sol", solUnits);
 
         // Embers of Muaat - Prototype War Suns
         Map<String, String[]> muaatUnits = new HashMap<>();
-        muaatUnits.put("War Sun", new String[]{"Prototype War Sun I", "Prototype War Sun II"});
+        muaatUnits.put("War Sun", new String[]{"Prototype War Sun", "Prototype War Sun II"});
         FACTION_SPECIFIC_UNITS.put("The Embers of Muaat", muaatUnits);
 
         // Titans of Ul - Saturn Engines
         Map<String, String[]> ulUnits = new HashMap<>();
-        ulUnits.put("Cruiser", new String[]{"Saturn Engine I", "Saturn Engine II"});
+        ulUnits.put("Cruiser", new String[]{"Saturn Engine", "Saturn Engine II"});
         FACTION_SPECIFIC_UNITS.put("The Titans of Ul", ulUnits);
 
         // L1Z1X Mindnet - Super Dreadnoughts
         Map<String, String[]> l1z1xUnits = new HashMap<>();
-        l1z1xUnits.put("Dreadnought", new String[]{"Super Dreadnought I", "Super Dreadnought II"});
+        l1z1xUnits.put("Dreadnought", new String[]{"Super Dreadnought", "Super Dreadnought II"});
         FACTION_SPECIFIC_UNITS.put("The L1Z1X Mindnet", l1z1xUnits);
         
         // Naalu Collective - Hybrid Crystal Fighters
         Map<String, String[]> naaluUnits = new HashMap<>();
-        naaluUnits.put("Fighter", new String[]{"Hybrid Crystal Fighter I", "Hybrid Crystal Fighter II"});
+        naaluUnits.put("Fighter", new String[]{"Hybrid Crystal Fighter", "Hybrid Crystal Fighter II"});
         FACTION_SPECIFIC_UNITS.put("The Naalu Collective", naaluUnits);
         
         // Argent Flight - Strike Wing Alpha
         Map<String, String[]> argentUnits = new HashMap<>();
-        argentUnits.put("Destroyer", new String[]{"Strike Wing Alpha I", "Strike Wing Alpha II"});
+        argentUnits.put("Destroyer", new String[]{"Strike Wing Alpha", "Strike Wing Alpha II"});
         FACTION_SPECIFIC_UNITS.put("The Argent Flight", argentUnits);
         
         // Naaz-Rokha Alliance - Z-Grav Eidolon Mech
@@ -114,7 +114,7 @@ public class CombatSimulator extends JFrame {
         
         // Enable Infantry and Mech for Nekro
         Map<String, String[]> nekroUnits = new HashMap<>();
-        nekroUnits.put("Infantry", new String[]{"Infantry I", "Infantry II"});
+        nekroUnits.put("Infantry", new String[]{"Infantry", "Infantry II"});
         nekroUnits.put("Mech", new String[]{"Mech"});
         FACTION_SPECIFIC_UNITS.put("The Nekro Virus", nekroUnits);
     }
@@ -184,20 +184,20 @@ public class CombatSimulator extends JFrame {
     private static final Map<String, String> UNIT_NAME_TO_CODE = new HashMap<>();
     static {
         // Standard units
-        UNIT_NAME_TO_CODE.put("Carrier I", "c");
+        UNIT_NAME_TO_CODE.put("Carrier", "c");
         UNIT_NAME_TO_CODE.put("Carrier II", "c2");
-        UNIT_NAME_TO_CODE.put("Cruiser I", "cr");
+        UNIT_NAME_TO_CODE.put("Cruiser", "cr");
         UNIT_NAME_TO_CODE.put("Cruiser II", "cr2");
-        UNIT_NAME_TO_CODE.put("Destroyer I", "d");
+        UNIT_NAME_TO_CODE.put("Destroyer", "d");
         UNIT_NAME_TO_CODE.put("Destroyer II", "d2");
         UNIT_NAME_TO_CODE.put("Destroyer III", "d3");
-        UNIT_NAME_TO_CODE.put("Dreadnought I", "dr");
+        UNIT_NAME_TO_CODE.put("Dreadnought", "dr");
         UNIT_NAME_TO_CODE.put("Dreadnought II", "dr2");
         UNIT_NAME_TO_CODE.put("Dreadnought III", "dr3");
-        UNIT_NAME_TO_CODE.put("Fighter I", "f");
+        UNIT_NAME_TO_CODE.put("Fighter", "f");
         UNIT_NAME_TO_CODE.put("Fighter II", "f2");
         UNIT_NAME_TO_CODE.put("Fighter III", "f3");
-        UNIT_NAME_TO_CODE.put("Infantry I", "i");
+        UNIT_NAME_TO_CODE.put("Infantry", "i");
         UNIT_NAME_TO_CODE.put("Infantry II", "i2");
         UNIT_NAME_TO_CODE.put("Mech", "m");
         UNIT_NAME_TO_CODE.put("War Sun", "ws");
@@ -205,17 +205,17 @@ public class CombatSimulator extends JFrame {
         // Faction-specific units
         UNIT_NAME_TO_CODE.put("Exotrireme", "dr");
         UNIT_NAME_TO_CODE.put("Exotrireme II", "dr");
-        UNIT_NAME_TO_CODE.put("Advanced Carrier I", "c");
+        UNIT_NAME_TO_CODE.put("Advanced Carrier", "c");
         UNIT_NAME_TO_CODE.put("Advanced Carrier II", "c");
-        UNIT_NAME_TO_CODE.put("Prototype War Sun I", "ws");
+        UNIT_NAME_TO_CODE.put("Prototype War Sun", "ws");
         UNIT_NAME_TO_CODE.put("Prototype War Sun II", "ws");
-        UNIT_NAME_TO_CODE.put("Saturn Engine I", "cr");
+        UNIT_NAME_TO_CODE.put("Saturn Engine", "cr");
         UNIT_NAME_TO_CODE.put("Saturn Engine II", "cr2");
-        UNIT_NAME_TO_CODE.put("Super Dreadnought I", "dr2");
+        UNIT_NAME_TO_CODE.put("Super Dreadnought", "dr2");
         UNIT_NAME_TO_CODE.put("Super Dreadnought II", "dr3");
-        UNIT_NAME_TO_CODE.put("Hybrid Crystal Fighter I", "f2");
+        UNIT_NAME_TO_CODE.put("Hybrid Crystal Fighter", "f2");
         UNIT_NAME_TO_CODE.put("Hybrid Crystal Fighter II", "f3");
-        UNIT_NAME_TO_CODE.put("Strike Wing Alpha I", "d2");
+        UNIT_NAME_TO_CODE.put("Strike Wing Alpha", "d2");
         UNIT_NAME_TO_CODE.put("Strike Wing Alpha II", "d3");
         UNIT_NAME_TO_CODE.put("Z-Grav Eidolon", "z_grav_eidolon");
     }
@@ -700,7 +700,7 @@ public class CombatSimulator extends JFrame {
                             for (Component sub : subComponents) {
                                 if (sub instanceof JLabel) {
                                     JLabel label = (JLabel) sub;
-                                    if (label.getText().equals("Infantry I") || label.getText().equals("Mech")) {
+                                    if (label.getText().equals("Infantry") || label.getText().equals("Mech")) {
                                         panel.setVisible(shouldShowInfantryMech);
                                     }
                                 }
@@ -732,7 +732,7 @@ public class CombatSimulator extends JFrame {
                 shipQuantities.put("Flagship:" + flagships[0], quantitySpinner);
                 
                 // Add Infantry and Mech (initially hidden)
-                addShipToPanelForNekro("Infantry I", true, false);
+                addShipToPanelForNekro("Infantry", true, false);
                 addShipToPanelForNekro("Mech", true, false);
             }
             
@@ -982,11 +982,11 @@ public class CombatSimulator extends JFrame {
         
         // Add default ship options (no faction selected) - only level 1 ships
         // Order: Fighter, Destroyer, Cruiser, Carrier, Dreadnought, War Sun
-        addShipToPanel("Fighter I");
-        addShipToPanel("Destroyer I");
-        addShipToPanel("Cruiser I");
-        addShipToPanel("Carrier I");
-        addShipToPanel("Dreadnought I");
+        addShipToPanel("Fighter");
+        addShipToPanel("Destroyer");
+        addShipToPanel("Cruiser");
+        addShipToPanel("Carrier");
+        addShipToPanel("Dreadnought");
         addShipToPanel("War Sun");
         
         // Disable all spinners initially
@@ -1023,11 +1023,11 @@ public class CombatSimulator extends JFrame {
         
         // Add default upgrade options for standard ships in specific order
         // Order: Fighter, Destroyer, Cruiser, Carrier, Dreadnought
-        addShipUpgradeCheckbox("Fighter II", "Fighter I");
-        addShipUpgradeCheckbox("Destroyer II", "Destroyer I");
-        addShipUpgradeCheckbox("Cruiser II", "Cruiser I");
-        addShipUpgradeCheckbox("Carrier II", "Carrier I");
-        addShipUpgradeCheckbox("Dreadnought II", "Dreadnought I");
+        addShipUpgradeCheckbox("Fighter II", "Fighter");
+        addShipUpgradeCheckbox("Destroyer II", "Destroyer");
+        addShipUpgradeCheckbox("Cruiser II", "Cruiser");
+        addShipUpgradeCheckbox("Carrier II", "Carrier");
+        addShipUpgradeCheckbox("Dreadnought II", "Dreadnought");
         
         // Disable all checkboxes initially
         for (JCheckBox checkBox : upgradeCheckboxes) {
@@ -1047,41 +1047,41 @@ public class CombatSimulator extends JFrame {
         
         // Add standard upgrades in specific order
         // Order: Fighter, Destroyer, Cruiser, Carrier, Dreadnought
-        addShipUpgradeCheckbox("Fighter II", "Fighter I");
+        addShipUpgradeCheckbox("Fighter II", "Fighter");
         
         // Add faction-specific destroyer upgrade or standard one
         if (selectedFaction.equals("The Argent Flight")) {
-            addShipUpgradeCheckbox("Strike Wing Alpha II", "Strike Wing Alpha I");
+            addShipUpgradeCheckbox("Strike Wing Alpha II", "Strike Wing Alpha");
         } else {
-            addShipUpgradeCheckbox("Destroyer II", "Destroyer I");
+            addShipUpgradeCheckbox("Destroyer II", "Destroyer");
         }
         
         // Add faction-specific cruiser upgrade or standard one
         if (selectedFaction.equals("The Titans of Ul")) {
-            addShipUpgradeCheckbox("Saturn Engine II", "Saturn Engine I");
+            addShipUpgradeCheckbox("Saturn Engine II", "Saturn Engine");
         } else {
-            addShipUpgradeCheckbox("Cruiser II", "Cruiser I");
+            addShipUpgradeCheckbox("Cruiser II", "Cruiser");
         }
         
         // Add faction-specific carrier upgrade or standard one
         if (selectedFaction.equals("The Federation of Sol")) {
-            addShipUpgradeCheckbox("Advanced Carrier II", "Advanced Carrier I");
+            addShipUpgradeCheckbox("Advanced Carrier II", "Advanced Carrier");
         } else {
-            addShipUpgradeCheckbox("Carrier II", "Carrier I");
+            addShipUpgradeCheckbox("Carrier II", "Carrier");
         }
         
         // Add faction-specific dreadnought upgrade or standard one
         if (selectedFaction.equals("The Sardakk N'orr")) {
-            addShipUpgradeCheckbox("Exotrireme II", "Exotrireme I");
+            addShipUpgradeCheckbox("Exotrireme II", "Exotrireme");
         } else if (selectedFaction.equals("The L1Z1X Mindnet")) {
-            addShipUpgradeCheckbox("Super Dreadnought II", "Super Dreadnought I");
+            addShipUpgradeCheckbox("Super Dreadnought II", "Super Dreadnought");
         } else {
-            addShipUpgradeCheckbox("Dreadnought II", "Dreadnought I");
+            addShipUpgradeCheckbox("Dreadnought II", "Dreadnought");
         }
         
         // Add War Sun upgrades for Muaat
         if (selectedFaction.equals("The Embers of Muaat")) {
-            addShipUpgradeCheckbox("Prototype War Sun II", "Prototype War Sun I");
+            addShipUpgradeCheckbox("Prototype War Sun II", "Prototype War Sun");
         }
         
         // Add flagship upgrade for Nomad
@@ -1096,7 +1096,7 @@ public class CombatSimulator extends JFrame {
             boolean shouldBeVisible = flagshipSpinner != null && (Integer) flagshipSpinner.getValue() > 0;
             
             // Add Infantry upgrade checkbox with visibility based on flagship
-            JCheckBox infantryUpgradeCheckBox = addShipUpgradeCheckboxWithVisibility("Infantry II", "Infantry I", shouldBeVisible);
+            JCheckBox infantryUpgradeCheckBox = addShipUpgradeCheckboxWithVisibility("Infantry II", "Infantry", shouldBeVisible);
             
             // Add a change listener to the flagship spinner to update the visibility
             if (flagshipSpinner != null) {
@@ -1119,7 +1119,7 @@ public class CombatSimulator extends JFrame {
                 }
             }
             // Add Naalu's special fighter upgrade at the beginning
-            addShipUpgradeCheckboxAt("Hybrid Crystal Fighter II", "Hybrid Crystal Fighter I", 0);
+            addShipUpgradeCheckboxAt("Hybrid Crystal Fighter II", "Hybrid Crystal Fighter", 0);
         }
         
         upgradesPanel.revalidate();
@@ -1128,17 +1128,12 @@ public class CombatSimulator extends JFrame {
     
     // Helper to add an upgrade checkbox at a specific position
     private void addShipUpgradeCheckboxAt(String upgradedName, String baseName, int position) {
-        // Remove the " I" suffix from baseName for display
-        String displayName = baseName.endsWith(" I") ? baseName.substring(0, baseName.length() - 2) : baseName;
+        String displayName = baseName;
         
         JCheckBox upgradeCheckBox = new JCheckBox("<html>Upgrade " + displayName + "</html>");
         upgradeCheckBox.setForeground(Color.WHITE);
         upgradeCheckBox.setFont(new Font("Monospaced", Font.PLAIN, 13));
         upgradeCheckBox.setOpaque(false);
-        
-        // Note: The enabled state is now managed by the caller method
-        // When used in initializeUpgradesPanel(), they will be disabled by the loop after all are added
-        // When used in updateUpgradesForFaction(), they will remain enabled
         
         // Add upgrade functionality
         upgradeCheckBox.addActionListener(e -> {
@@ -1487,13 +1482,13 @@ public class CombatSimulator extends JFrame {
                 String checkboxText = checkBox.getText();
                 if (checkboxText.contains("Upgrade ")) {
                     String displayName = checkboxText.substring(checkboxText.indexOf("Upgrade ") + 8, checkboxText.indexOf("</html>"));
-                    // If this is a base name without "I", we need to add it back for processing
+                    // Base name is just the display name directly
                     String baseName = displayName;
-                    if (!displayName.endsWith(" I") && !displayName.equals("Memoria") && !displayName.equals("Mech") && !displayName.equals("War Sun")) {
-                        baseName = displayName + " I";
+                    // Special handling for Memoria/Mech/War Sun which don't have II upgrades
+                    if (!displayName.equals("Memoria") && !displayName.equals("Mech") && !displayName.equals("War Sun")) {
+                        String upgradedName = getUpgradedNameFromBaseName(baseName);
+                        updateShipType(baseName, upgradedName, false); // Downgrade
                     }
-                    String upgradedName = getUpgradedNameFromBaseName(baseName);
-                    updateShipType(baseName, upgradedName, false); // Downgrade
                 }
             }
             checkBox.setEnabled(false); // Disable checkbox
@@ -1518,15 +1513,11 @@ public class CombatSimulator extends JFrame {
     
     // Helper method to determine upgraded name from base name
     private String getUpgradedNameFromBaseName(String baseName) {
-        if (baseName.endsWith(" I")) {
-            return baseName.substring(0, baseName.length() - 2) + " II";
-        } else if (baseName.equals("Memoria")) {
+        if (baseName.equals("Memoria")) {
             return "Memoria II";
-        } else if (baseName.contains("I")) {
-            // For other faction-specific units
-            return baseName.replace("I", "II");
+        } else {
+            return baseName + " II";
         }
-        return baseName;
     }
     
     private String convertFlagshipNameToCode(String flagshipName) {
