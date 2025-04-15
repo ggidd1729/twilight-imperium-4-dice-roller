@@ -626,14 +626,23 @@ public class CombatSimulator extends JFrame {
         // Get faction-specific unit overrides
         Map<String, String[]> factionUnits = FACTION_SPECIFIC_UNITS.get(selectedFaction);
         
-        // Process standard ship types first
-        for (Map.Entry<String, String[]> entry : BASE_SHIP_TYPES.entrySet()) {
-            String shipCategory = entry.getKey();
-            String[] variants = entry.getValue();
+        // Ordered list of standard unit types to display
+        List<String> unitDisplayOrder = Arrays.asList(
+            "Fighter", "Destroyer", "Cruiser", "Carrier", "Dreadnought", "War Sun"
+        );
+        
+        // Process ship types in the specified order
+        for (String shipCategory : unitDisplayOrder) {
+            String[] variants = BASE_SHIP_TYPES.get(shipCategory);
             
-            // Skip Infantry and Mech for non-Nekro factions unless explicitly allowed
+            // Skip units that shouldn't be shown for certain factions
             if ((shipCategory.equals("Infantry") || shipCategory.equals("Mech")) && 
                 !selectedFaction.equals("The Nekro Virus")) {
+                continue;
+            }
+            
+            // Skip Mech for NRA (will add Z-Grav Eidolon specially)
+            if (selectedFaction.equals("The Naaz-Rokha Alliance") && shipCategory.equals("Mech")) {
                 continue;
             }
             
@@ -642,27 +651,25 @@ public class CombatSimulator extends JFrame {
                 variants = factionUnits.get(shipCategory);
             }
             
-            // Skip Mech for NRA (will add Z-Grav Eidolon specially)
-            if (selectedFaction.equals("The Naaz-Rokha Alliance") && shipCategory.equals("Mech")) {
-                continue;
-            }
-            
             // Add only base version of each unit if upgradeable
-            // Upgrades will be handled by the upgrade panel
-            if (variants.length > 1) {
+            if (variants != null && variants.length > 0) {
                 addShipToPanel(variants[0]); // Add only the base variant
-            } else {
-                addShipToPanel(variants[0]); // Add the only variant
             }
         }
         
         // Handle special cases
         if (selectedFaction.equals("The Naaz-Rokha Alliance")) {
-            // Add Z-Grav Eidolon for NRA
+            // Add Z-Grav Eidolon for NRA (after standard ships)
             addShipToPanel("Z-Grav Eidolon");
         }
         
-        // Add the faction's flagship
+        // Add Infantry and Mech for Nekro Virus
+        if (selectedFaction.equals("The Nekro Virus")) {
+            addShipToPanel("Infantry I");
+            addShipToPanel("Mech");
+        }
+        
+        // Add the faction's flagship last
         String[] flagships = FACTION_FLAGSHIPS.get(selectedFaction);
         if (flagships != null && flagships.length > 0) {
             // For factions with upgradeable flagships (like Nomad), show only the base flagship
@@ -802,11 +809,12 @@ public class CombatSimulator extends JFrame {
         shipQuantities.clear();
         
         // Add default ship options (no faction selected) - only level 1 ships
-        addShipToPanel("Carrier I");
-        addShipToPanel("Cruiser I");
-        addShipToPanel("Destroyer I");
-        addShipToPanel("Dreadnought I");
+        // Order: Fighter, Destroyer, Cruiser, Carrier, Dreadnought, War Sun
         addShipToPanel("Fighter I");
+        addShipToPanel("Destroyer I");
+        addShipToPanel("Cruiser I");
+        addShipToPanel("Carrier I");
+        addShipToPanel("Dreadnought I");
         addShipToPanel("War Sun");
         
         shipSelectionPanel.revalidate();
@@ -835,12 +843,13 @@ public class CombatSimulator extends JFrame {
         upgradesPanel.removeAll();
         upgradeCheckboxes.clear();
         
-        // Add default upgrade options for standard ships
-        addShipUpgradeCheckbox("Carrier II", "Carrier I");
-        addShipUpgradeCheckbox("Cruiser II", "Cruiser I");
-        addShipUpgradeCheckbox("Destroyer II", "Destroyer I");
-        addShipUpgradeCheckbox("Dreadnought II", "Dreadnought I");
+        // Add default upgrade options for standard ships in specific order
+        // Order: Fighter, Destroyer, Cruiser, Carrier, Dreadnought
         addShipUpgradeCheckbox("Fighter II", "Fighter I");
+        addShipUpgradeCheckbox("Destroyer II", "Destroyer I");
+        addShipUpgradeCheckbox("Cruiser II", "Cruiser I");
+        addShipUpgradeCheckbox("Carrier II", "Carrier I");
+        addShipUpgradeCheckbox("Dreadnought II", "Dreadnought I");
         
         upgradesPanel.revalidate();
         upgradesPanel.repaint();
@@ -858,60 +867,74 @@ public class CombatSimulator extends JFrame {
         upgradesPanel.removeAll();
         upgradeCheckboxes.clear();
         
-        // Add standard upgrades for most ships
-        addShipUpgradeCheckbox("Carrier II", "Carrier I");
-        addShipUpgradeCheckbox("Cruiser II", "Cruiser I");
-        addShipUpgradeCheckbox("Destroyer II", "Destroyer I");
-        addShipUpgradeCheckbox("Dreadnought II", "Dreadnought I");
+        // Add standard upgrades in specific order
+        // Order: Fighter, Destroyer, Cruiser, Carrier, Dreadnought
         addShipUpgradeCheckbox("Fighter II", "Fighter I");
         
-        // Add faction-specific upgrades
-        switch (selectedFaction) {
-            case "The Embers of Muaat":
-                addShipUpgradeCheckbox("Prototype War Sun II", "Prototype War Sun I");
-                break;
-            case "The Federation of Sol":
-                addShipUpgradeCheckbox("Advanced Carrier II", "Advanced Carrier I");
-                break;
-            case "The Sardakk N'orr":
-                addShipUpgradeCheckbox("Exotrireme II", "Exotrireme I");
-                break;
-            case "The Titans of Ul":
-                addShipUpgradeCheckbox("Saturn Engine II", "Saturn Engine I");
-                break;
-            case "The L1Z1X Mindnet":
-                addShipUpgradeCheckbox("Super Dreadnought II", "Super Dreadnought I");
-                break;
-            case "The Naalu Collective":
-                addShipUpgradeCheckbox("Hybrid Crystal Fighter II", "Hybrid Crystal Fighter I");
-                break;
-            case "The Argent Flight":
-                addShipUpgradeCheckbox("Strike Wing Alpha II", "Strike Wing Alpha I");
-                break;
-            case "The Nekro Virus":
-                addShipUpgradeCheckbox("Infantry II", "Infantry I");
-                break;
-            case "The Nomad":
-                addShipUpgradeCheckbox("Memoria II", "Memoria");
-                break;
-            case "The Naaz-Rokha Alliance":
-                // No specific unit upgrades, they have Z-Grav Eidolon which doesn't upgrade
-                break;
+        // Add faction-specific destroyer upgrade or standard one
+        if (selectedFaction.equals("The Argent Flight")) {
+            addShipUpgradeCheckbox("Strike Wing Alpha II", "Strike Wing Alpha I");
+        } else {
+            addShipUpgradeCheckbox("Destroyer II", "Destroyer I");
         }
         
-        // If no upgrades were added, show a message
-        if (upgradeCheckboxes.isEmpty()) {
-            JLabel noUpgradesLabel = new JLabel("No upgrades available for this faction");
-            noUpgradesLabel.setForeground(Color.WHITE);
-            noUpgradesLabel.setFont(new Font("Monospaced", Font.PLAIN, 13));
-            upgradesPanel.add(noUpgradesLabel);
+        // Add faction-specific cruiser upgrade or standard one
+        if (selectedFaction.equals("The Titans of Ul")) {
+            addShipUpgradeCheckbox("Saturn Engine II", "Saturn Engine I");
+        } else {
+            addShipUpgradeCheckbox("Cruiser II", "Cruiser I");
+        }
+        
+        // Add faction-specific carrier upgrade or standard one
+        if (selectedFaction.equals("The Federation of Sol")) {
+            addShipUpgradeCheckbox("Advanced Carrier II", "Advanced Carrier I");
+        } else {
+            addShipUpgradeCheckbox("Carrier II", "Carrier I");
+        }
+        
+        // Add faction-specific dreadnought upgrade or standard one
+        if (selectedFaction.equals("The Sardakk N'orr")) {
+            addShipUpgradeCheckbox("Exotrireme II", "Exotrireme I");
+        } else if (selectedFaction.equals("The L1Z1X Mindnet")) {
+            addShipUpgradeCheckbox("Super Dreadnought II", "Super Dreadnought I");
+        } else {
+            addShipUpgradeCheckbox("Dreadnought II", "Dreadnought I");
+        }
+        
+        // Add War Sun upgrades for Muaat
+        if (selectedFaction.equals("The Embers of Muaat")) {
+            addShipUpgradeCheckbox("Prototype War Sun II", "Prototype War Sun I");
+        }
+        
+        // Add flagship upgrade for Nomad
+        if (selectedFaction.equals("The Nomad")) {
+            addShipUpgradeCheckbox("Memoria II", "Memoria");
+        }
+        
+        // Add Infantry upgrade for Nekro
+        if (selectedFaction.equals("The Nekro Virus")) {
+            addShipUpgradeCheckbox("Infantry II", "Infantry I");
+        }
+        
+        // Special handling for Naalu Collective's fighter upgrade
+        if (selectedFaction.equals("The Naalu Collective")) {
+            // Remove the standard fighter upgrade checkbox if it exists
+            for (JCheckBox checkBox : new ArrayList<>(upgradeCheckboxes)) {
+                if (checkBox.getText().contains("Fighter II")) {
+                    upgradeCheckboxes.remove(checkBox);
+                    upgradesPanel.remove(checkBox);
+                }
+            }
+            // Add Naalu's special fighter upgrade at the beginning
+            addShipUpgradeCheckboxAt("Hybrid Crystal Fighter II", "Hybrid Crystal Fighter I", 0);
         }
         
         upgradesPanel.revalidate();
         upgradesPanel.repaint();
     }
     
-    private void addShipUpgradeCheckbox(String upgradedName, String baseName) {
+    // Helper to add an upgrade checkbox at a specific position
+    private void addShipUpgradeCheckboxAt(String upgradedName, String baseName, int position) {
         JCheckBox upgradeCheckBox = new JCheckBox("<html>Upgrade to " + upgradedName + "</html>");
         upgradeCheckBox.setForeground(Color.WHITE);
         upgradeCheckBox.setFont(new Font("Monospaced", Font.PLAIN, 13));
@@ -923,8 +946,25 @@ public class CombatSimulator extends JFrame {
             updateShipType(baseName, upgradedName, isUpgraded);
         });
         
-        upgradesPanel.add(upgradeCheckBox);
-        upgradeCheckboxes.add(upgradeCheckBox);
+        // Insert at specific position if grid layout allows, otherwise add to end
+        if (upgradesPanel.getComponentCount() <= position) {
+            upgradesPanel.add(upgradeCheckBox);
+        } else {
+            upgradesPanel.add(upgradeCheckBox, position);
+        }
+        
+        // Add to the list at the appropriate position
+        if (upgradeCheckboxes.size() <= position) {
+            upgradeCheckboxes.add(upgradeCheckBox);
+        } else {
+            upgradeCheckboxes.add(position, upgradeCheckBox);
+        }
+    }
+    
+    // Helper to add an upgrade checkbox at the end
+    private void addShipUpgradeCheckbox(String upgradedName, String baseName) {
+        // Simply delegate to the position-based method, adding at the end
+        addShipUpgradeCheckboxAt(upgradedName, baseName, upgradesPanel.getComponentCount());
     }
     
     private void updateShipType(String baseName, String upgradedName, boolean isUpgraded) {
