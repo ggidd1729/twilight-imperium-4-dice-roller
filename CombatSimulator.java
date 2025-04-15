@@ -27,12 +27,31 @@ public class CombatSimulator extends JFrame {
     private ImageIcon backgroundImage;
     
     private static final String[] FACTIONS = {
-        "Select Faction", "The Arborec", "The Barony of Letnev", "The Clan of Saar", "The Embers of Muaat",
-        "The Emirates of Hacan", "The Federation of Sol", "The Ghosts of Creuss", "The L1Z1X Mindnet",
-        "The Mentak Coalition", "The Naalu Collective", "The Nekro Virus", "The Sardakk N'orr",
-        "The Universities of Jol-Nar", "The Winnu", "The Xxcha Kingdom", "The Yin Brotherhood",
-        "The Yssaril Tribes", "The Argent Flight", "The Empyrean", "The Mahact Gene-Sorcerers",
-        "The Naaz-Rokha Alliance", "The Nomad", "The Titans of Ul", "The Vuil'raith Cabal"
+        "Select Faction", 
+        "The Arborec", 
+        "The Argent Flight", 
+        "The Barony of Letnev", 
+        "The Clan of Saar", 
+        "The Embers of Muaat",
+        "The Empyrean", 
+        "The Emirates of Hacan", 
+        "The Federation of Sol", 
+        "The Ghosts of Creuss", 
+        "The L1Z1X Mindnet",
+        "The Mahact Gene-Sorcerers",
+        "The Mentak Coalition", 
+        "The Naalu Collective", 
+        "The Naaz-Rokha Alliance", 
+        "The Nekro Virus", 
+        "The Nomad", 
+        "The Sardakk N'orr",
+        "The Titans of Ul", 
+        "The Universities of Jol-Nar", 
+        "The Vuil'raith Cabal",
+        "The Winnu", 
+        "The Xxcha Kingdom", 
+        "The Yin Brotherhood",
+        "The Yssaril Tribes"
     };
     
     // Base ship types available to most factions
