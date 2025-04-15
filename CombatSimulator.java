@@ -25,6 +25,7 @@ public class CombatSimulator extends JFrame {
     private List<JCheckBox> modifierCheckboxes = new ArrayList<>();
     private List<JCheckBox> upgradeCheckboxes = new ArrayList<>();
     private ImageIcon backgroundImage;
+    private String previouslySelectedFaction = null;
     
     private static final String[] FACTIONS = {
         "Select Faction", 
@@ -606,6 +607,19 @@ public class CombatSimulator extends JFrame {
     }
 
     private void updatePanelsForFaction() {
+        String selectedFaction = (String) factionComboBox.getSelectedItem();
+        
+        // Return early if faction is null, "Select Faction", or the same as previously selected
+        if (selectedFaction == null || 
+            selectedFaction.equals("Select Faction") || 
+            selectedFaction.equals(previouslySelectedFaction)) {
+            return;
+        }
+        
+        // Update the previously selected faction
+        previouslySelectedFaction = selectedFaction;
+        
+        // Update all panels for the new faction
         updateShipSelectionForFaction();
         updateModifiersForFaction();
         updateUpgradesForFaction();
@@ -613,11 +627,6 @@ public class CombatSimulator extends JFrame {
     
     private void updateShipSelectionForFaction() {
         String selectedFaction = (String) factionComboBox.getSelectedItem();
-        
-        // If "Select Faction" is selected, don't reset ships, keep current state
-        if (selectedFaction == null || selectedFaction.equals("Select Faction")) {
-            return; // Keep the current ship selection
-        }
         
         // Clear existing panel and quantities
         shipSelectionPanel.removeAll();
@@ -720,58 +729,56 @@ public class CombatSimulator extends JFrame {
             modifierCheckboxes.add(checkBox);
         }
         
-        // Add faction-specific modifiers if needed
-        if (selectedFaction != null && !selectedFaction.equals("Select Faction")) {
-            if (modifierFactions.contains(selectedFaction)) {
-                String modifier = FACTION_SPECIFIC_MODIFIERS.get(selectedFaction);
-    
-                JCheckBox checkBox = new JCheckBox(modifier);
-                checkBox.setForeground(Color.WHITE);
-                checkBox.setFont(new Font("Monospaced", Font.PLAIN, 13));
-                checkBox.setOpaque(false);
-                
-                modifiersPanel.add(checkBox);
-                modifierCheckboxes.add(checkBox);
-            }
+        // Add faction-specific modifiers if available
+        if (modifierFactions.contains(selectedFaction)) {
+            String modifier = FACTION_SPECIFIC_MODIFIERS.get(selectedFaction);
+
+            JCheckBox checkBox = new JCheckBox(modifier);
+            checkBox.setForeground(Color.WHITE);
+            checkBox.setFont(new Font("Monospaced", Font.PLAIN, 13));
+            checkBox.setOpaque(false);
             
-            // Special Winnu flagship ability with additional dice spinner
-            if (selectedFaction.equals("The Winnu")) {
-                // Use a horizontal panel instead of vertical
-                JPanel winnuPanel = new JPanel(new BorderLayout(5, 0));
-                winnuPanel.setOpaque(false);
-                
-                JLabel flagshipLabel = new JLabel("<html>Salai Sai Corian's Ability<br>(set combat dice count)</html>");
-                flagshipLabel.setForeground(Color.WHITE);
-                flagshipLabel.setFont(new Font("Monospaced", Font.PLAIN, 13));
-                
-                // Create a panel for the spinner
-                JPanel spinnerPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 5, 0));
-                spinnerPanel.setLayout(new BoxLayout(spinnerPanel, BoxLayout.Y_AXIS));
-                spinnerPanel.setOpaque(false);
+            modifiersPanel.add(checkBox);
+            modifierCheckboxes.add(checkBox);
+        }
+        
+        // Special Winnu flagship ability with additional dice spinner
+        if (selectedFaction.equals("The Winnu")) {
+            // Use a horizontal panel instead of vertical
+            JPanel winnuPanel = new JPanel(new BorderLayout(5, 0));
+            winnuPanel.setOpaque(false);
+            
+            JLabel flagshipLabel = new JLabel("<html>Salai Sai Corian's Ability<br>(set combat dice count)</html>");
+            flagshipLabel.setForeground(Color.WHITE);
+            flagshipLabel.setFont(new Font("Monospaced", Font.PLAIN, 13));
+            
+            // Create a panel for the spinner
+            JPanel spinnerPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 5, 0));
+            spinnerPanel.setLayout(new BoxLayout(spinnerPanel, BoxLayout.Y_AXIS));
+            spinnerPanel.setOpaque(false);
 
-                // Add vertical glue before spinner
-                spinnerPanel.add(Box.createVerticalGlue());
+            // Add vertical glue before spinner
+            spinnerPanel.add(Box.createVerticalGlue());
 
-                // Create the spinner in its own panel
-                JPanel spinnerControlPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 5, 0));
-                spinnerControlPanel.setOpaque(false);
-                
-                SpinnerNumberModel model = new SpinnerNumberModel(0, 0, 100, 1);
-                JSpinner diceSpinner = new JSpinner(model);
-                diceSpinner.setPreferredSize(new Dimension(60, 25));
-                diceSpinner.setMaximumSize(new Dimension(80, 50000));
-                diceSpinner.setFont(new Font("Monospaced", Font.PLAIN, 13));
-                
-                spinnerPanel.add(diceSpinner);
-                
-                winnuPanel.add(flagshipLabel, BorderLayout.WEST);
-                winnuPanel.add(spinnerPanel, BorderLayout.CENTER);
-                
-                modifiersPanel.add(winnuPanel);
-                
-                // Store the spinner for later access
-                shipQuantities.put("WinnuFlagshipDice", diceSpinner);
-            }
+            // Create the spinner in its own panel
+            JPanel spinnerControlPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 5, 0));
+            spinnerControlPanel.setOpaque(false);
+            
+            SpinnerNumberModel model = new SpinnerNumberModel(0, 0, 100, 1);
+            JSpinner diceSpinner = new JSpinner(model);
+            diceSpinner.setPreferredSize(new Dimension(60, 25));
+            diceSpinner.setMaximumSize(new Dimension(80, 50000));
+            diceSpinner.setFont(new Font("Monospaced", Font.PLAIN, 13));
+            
+            spinnerPanel.add(diceSpinner);
+            
+            winnuPanel.add(flagshipLabel, BorderLayout.WEST);
+            winnuPanel.add(spinnerPanel, BorderLayout.CENTER);
+            
+            modifiersPanel.add(winnuPanel);
+            
+            // Store the spinner for later access
+            shipQuantities.put("WinnuFlagshipDice", diceSpinner);
         }
         
         modifiersPanel.revalidate();
@@ -858,11 +865,6 @@ public class CombatSimulator extends JFrame {
     private void updateUpgradesForFaction() {
         String selectedFaction = (String) factionComboBox.getSelectedItem();
 
-        // If "Select Faction" is selected, don't reset upgrades, keep current state
-        if (selectedFaction == null || selectedFaction.equals("Select Faction")) {
-            return; // Keep the current upgrades
-        }
-        
         // Clear all existing upgrades
         upgradesPanel.removeAll();
         upgradeCheckboxes.clear();
@@ -1272,6 +1274,7 @@ public class CombatSimulator extends JFrame {
         }
         
         // Reset faction selection
+        previouslySelectedFaction = null;
         factionComboBox.setSelectedIndex(0);
 
         // Clear the search field
