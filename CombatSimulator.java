@@ -604,6 +604,8 @@ public class CombatSimulator extends JFrame {
         
         mainPanel.add(contentPanel, BorderLayout.CENTER);
         setContentPane(mainPanel);
+
+        resultsArea.setText("Please select a faction to begin.");
     }
 
     private void updatePanelsForFaction() {
@@ -633,6 +635,8 @@ public class CombatSimulator extends JFrame {
         
         // Enable all controls after updating the panels
         setControlsEnabled(true);
+
+        resultsArea.setText("");
     }
     
     // Helper method to enable/disable all controls
@@ -1501,8 +1505,8 @@ public class CombatSimulator extends JFrame {
         // Clear the search field
         searchField.setText("");
         
-        // Clear results
-        resultsArea.setText("");
+        // Set results area message
+        resultsArea.setText("Please select a faction to begin.");
         
         // Reinitialize ship selection panel
         initializeShipSelectionPanel();
